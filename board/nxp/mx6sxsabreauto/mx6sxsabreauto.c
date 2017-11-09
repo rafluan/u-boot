@@ -32,6 +32,7 @@
 #include <usb/ehci-ci.h>
 #include <pca953x.h>
 #include <asm/mach-imx/video.h>
+#include <env.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -458,6 +459,10 @@ int board_late_init(void)
 	add_board_boot_modes(board_boot_modes);
 #endif
 
+	env_set("tee", "no");
+#ifdef CONFIG_IMX_OPTEE
+	env_set("tee", "yes");
+#endif
 
 #ifdef CONFIG_ENV_IS_IN_MMC
 	board_late_mmc_env_init();
