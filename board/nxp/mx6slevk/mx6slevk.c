@@ -31,6 +31,7 @@
 #include "../common/pfuze.h"
 #include <usb.h>
 #include <usb/ehci-ci.h>
+#include <env.h>
 #if defined(CONFIG_MXC_EPDC)
 #include <mxc_epdc_fb.h>
 #endif
@@ -704,6 +705,11 @@ void i2c_force_reset_slave(void)
 
 int board_late_init(void)
 {
+	env_set("tee", "no");
+#ifdef CONFIG_IMX_OPTEE
+	env_set("tee", "yes");
+#endif
+
 #ifdef CONFIG_ENV_IS_IN_MMC
 	board_late_mmc_env_init();
 #endif
