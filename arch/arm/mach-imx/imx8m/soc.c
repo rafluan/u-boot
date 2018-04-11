@@ -30,6 +30,7 @@
 #include <fsl_wdog.h>
 #include <fuse.h>
 #include <imx_sip.h>
+#include <linux/arm-smccc.h>
 #include <linux/bitops.h>
 #include <linux/bitfield.h>
 #include <linux/sizes.h>
@@ -1486,6 +1487,21 @@ int arch_misc_init(void)
 	return 0;
 }
 #endif
+
+int imx8m_usb_power(int usb_id, bool on)
+{
+	struct arm_smccc_res res;
+
+	if (usb_id > 1)
+		return -EINVAL;
+
+	arm_smccc_smc(IMX_SIP_GPC, IMX_SIP_GPC_PM_DOMAIN,
+			2 + usb_id, on, 0, 0, 0, 0, &res);
+	if (res.a0)
+		return -EPERM;
+
+	return 0;
+}
 
 #if IS_ENABLED(CONFIG_XPL_BUILD)
 #if IS_ENABLED(CONFIG_IMX8MQ) || IS_ENABLED(CONFIG_IMX8MM) || IS_ENABLED(CONFIG_IMX8MN)
