@@ -577,6 +577,14 @@ static int dm_announce(void)
 	return 0;
 }
 
+#if defined(AVB_RPMB) && !defined(CONFIG_SPL)
+extern int init_avbkey(void);
+static int initr_avbkey(void)
+{
+	return init_avbkey();
+}
+#endif
+
 static int run_main_loop(void)
 {
 #ifdef CONFIG_SANDBOX
@@ -780,6 +788,9 @@ static void initcall_run_r(void)
 	INITCALL(initr_mem);
 #endif
 	INITCALL(initr_boot_led_on);
+#if defined(AVB_RPMB) && !defined(CONFIG_SPL)
+	INITCALL(initr_avbkey);
+#endif
 	INITCALL(run_main_loop);
 }
 
