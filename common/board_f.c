@@ -910,7 +910,9 @@ static void initcall_run_f(void)
 #endif
 	INITCALL(env_init);		/* initialize environment */
 	INITCALL(init_baud_rate);	/* initialze baudrate settings */
+#if CONFIG_IS_ENABLED(ANDROID_AUTO_SUPPORT)
 	INITCALL(serial_init);		/* serial communications setup */
+#endif
 	INITCALL(console_init_f);	/* stage 1 init of console */
 	INITCALL(display_options);	/* say that we are here */
 	INITCALL(display_text_info);	/* show debugging info if required */
