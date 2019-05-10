@@ -427,7 +427,7 @@ void arch_preboot_os(void)
 #ifdef CONFIG_ENV_IS_IN_MMC
 __weak int board_mmc_get_env_dev(int devno)
 {
-	return CONFIG_ENV_MMC_DEVICE_INDEX;
+	return devno;
 }
 
 int mmc_get_env_dev(void)
