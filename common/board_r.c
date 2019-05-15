@@ -66,6 +66,9 @@
 #include <wdt.h>
 #include <asm-generic/gpio.h>
 #include <relocate.h>
+#ifdef CONFIG_FSL_FASTBOOT
+#include <fb_fsl.h>
+#endif
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -585,6 +588,20 @@ static int initr_avbkey(void)
 }
 #endif
 
+#ifdef CONFIG_FSL_FASTBOOT
+static int initr_fastboot_setup(void)
+{
+	fastboot_setup();
+	return 0;
+}
+
+static int initr_check_fastboot(void)
+{
+	fastboot_run_bootmode();
+	return 0;
+}
+#endif
+
 static int run_main_loop(void)
 {
 #ifdef CONFIG_SANDBOX
@@ -772,6 +789,9 @@ static void initcall_run_r(void)
 #if CONFIG_IS_ENABLED(BOARD_LATE_INIT)
 	INITCALL(board_late_init);
 #endif
+#ifdef CONFIG_FSL_FASTBOOT
+	INITCALL(initr_fastboot_setup);
+#endif
 #if CONFIG_IS_ENABLED(PCI_ENDPOINT)
 	INITCALL(pci_ep_init);
 #endif
@@ -790,6 +810,9 @@ static void initcall_run_r(void)
 	INITCALL(initr_boot_led_on);
 #if defined(AVB_RPMB) && !defined(CONFIG_SPL)
 	INITCALL(initr_avbkey);
+#endif
+#ifdef CONFIG_FSL_FASTBOOT
+	INITCALL(initr_check_fastboot);
 #endif
 	INITCALL(run_main_loop);
 }
