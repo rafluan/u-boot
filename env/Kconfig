@@ -720,7 +720,7 @@ config ENV_MTD_DEV
 config ENV_MMC_DEVICE_INDEX
 	int "SD/MMC device index"
 	depends on ENV_IS_IN_MMC || ENV_IS_IN_FAT || ENV_IS_IN_EXT4 || \
-		CMD_MVEBU_BUBT || FMAN_ENET || QE || PHY_CORTINA
+		CMD_MVEBU_BUBT || FMAN_ENET || QE || PHY_CORTINA || FSL_FASTBOOT
 	default 0
 	help
 	  SD/MMC device index on the platform where the environment is stored.
