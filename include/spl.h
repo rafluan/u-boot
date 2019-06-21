@@ -314,6 +314,9 @@ struct spl_image_info {
 #if IS_ENABLED(CONFIG_IMX_CRRM)
 	bool recovery;
 #endif
+#ifdef CONFIG_DUAL_BOOTLOADER
+	uint64_t rbindex;
+#endif
 };
 
 /* function to jump to an image from SPL */
