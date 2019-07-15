@@ -47,7 +47,7 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
-#if IS_ENABLED(CONFIG_IMX_HAB) || IS_ENABLED(CONFIG_AVB_ATX)
+#if IS_ENABLED(CONFIG_IMX_HAB) || IS_ENABLED(CONFIG_AVB_ATX) || IS_ENABLED(CONFIG_IMX_TRUSTY_OS)
 struct imx_fuse const imx_sec_config_fuse = {
 	.bank = 1,
 	.word = 3,
