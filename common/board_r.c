@@ -611,6 +611,15 @@ static int initr_tee_setup(void)
 }
 #endif
 
+#ifdef CONFIG_DUAL_BOOTLOADER
+extern void check_spl_recovery(void);
+static int initr_check_spl_recovery(void)
+{
+	check_spl_recovery();
+	return 0;
+}
+#endif
+
 static int run_main_loop(void)
 {
 #ifdef CONFIG_SANDBOX
@@ -826,8 +835,11 @@ static void initcall_run_r(void)
 #ifdef CONFIG_FSL_FASTBOOT
 	INITCALL(initr_check_fastboot);
 #endif
+#ifdef CONFIG_DUAL_BOOTLOADER
+	INITCALL(initr_check_spl_recovery);
+#endif
 	INITCALL(run_main_loop);
-}
+};
 
 void board_init_r(gd_t *new_gd, ulong dest_addr)
 {
