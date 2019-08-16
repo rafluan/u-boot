@@ -48,13 +48,18 @@ int mach_cpu_init(void)
 	return 0;
 }
 
+#define LCD_BACKLIGHT_GPIO	104
 #define MODEM_ENABLE_GPIO	111
 #define MAXIM_RESET_GPIO	117
 
 int board_early_init_f(void)
 {
+	gpio_request(LCD_BACKLIGHT_GPIO, "lcd_backlight");
+	gpio_direction_output(LCD_BACKLIGHT_GPIO, 1);
+
 	gpio_request(MODEM_ENABLE_GPIO, "modem_enable");
 	gpio_direction_output(MODEM_ENABLE_GPIO, 0);
+	
 	gpio_request(MAXIM_RESET_GPIO, "maxim_reset");
 	gpio_direction_output(MAXIM_RESET_GPIO, 1);
 
