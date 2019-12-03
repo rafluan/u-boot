@@ -8,4 +8,5 @@ obj-$(CONFIG_IMX_LDB) += ldb.o
 obj-$(CONFIG_IMX_LCDIF) += lcdif.o
 obj-$(CONFIG_VIDEO_IMXDPUV1) += imxdpuv1.o imx8_dc.o
 obj-$(CONFIG_VIDEO_IMX8_LVDS) += imx8_lvds.o
+obj-$(CONFIG_VIDEO_IMX8M_DCSS) += imx8m_dcss.o
 obj-y += hdmi/
