@@ -32,6 +32,7 @@
 #include <linux/usb/otg.h>
 #include <usb/ci_udc.h>
 #include <usb/ehci-ci.h>
+#include <usb/usb_mx6_common.h>
 #include "../host/ehci.h"
 #include "ci_udc.h"
 #include <dm/device-internal.h>
