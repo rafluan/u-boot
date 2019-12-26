@@ -52,7 +52,7 @@ int mach_cpu_init(void)
 #define MODEM_ENABLE_GPIO	111
 #define MAXIM_RESET_GPIO	117
 
-int board_early_init_f(void)
+int rk_board_late_init(void)
 {
 	gpio_request(LCD_BACKLIGHT_GPIO, "lcd_backlight");
 	gpio_direction_output(LCD_BACKLIGHT_GPIO, 1);
