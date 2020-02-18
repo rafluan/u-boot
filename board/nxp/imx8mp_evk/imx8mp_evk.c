@@ -25,6 +25,8 @@
 #include <dm/uclass-internal.h>
 #include <dm/pinctrl.h>
 #include <fuse.h>
+#include <mmc.h>
+#include <spl.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -525,5 +527,19 @@ void board_prep_linux(struct bootm_headers *images)
 	ret = uclass_find_device_by_seq(UCLASS_USB, 1, &dwc3_usb);
 	if (!ret)
 		pinctrl_select_state(dwc3_usb, "gpio");
+}
+#endif
+
+#ifdef CONFIG_SPL_MMC
+#define UBOOT_RAW_SECTOR_OFFSET 0x40
+unsigned long spl_mmc_get_uboot_raw_sector(struct mmc *mmc, unsigned long raw_sect)
+{
+	u32 boot_dev = spl_boot_device();
+	switch (boot_dev) {
+		case BOOT_DEVICE_MMC2:
+			return CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR - UBOOT_RAW_SECTOR_OFFSET;
+		default:
+			return CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR;
+	}
 }
 #endif
