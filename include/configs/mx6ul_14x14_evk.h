@@ -57,7 +57,7 @@
 	"fdt_addr=0x83000000\0" \
 	"tee_addr=0x84000000\0" \
 	"console=ttymxc0\0" \
-	"bootargs=console=ttymxc0,115200 ubi.mtd=4 "  \
+	"bootargs=console=ttymxc0,115200 ubi.mtd=nandrootfs "  \
 		"root=ubi0:rootfs rootfstype=ubifs "		     \
 		MFG_NAND_PARTITION \
 		"\0" \
