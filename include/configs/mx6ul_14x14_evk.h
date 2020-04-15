@@ -30,7 +30,43 @@
 
 #endif
 
+#ifdef CONFIG_NAND_BOOT
+#define MFG_NAND_PARTITION "mtdparts=gpmi-nand:64m(boot),16m(kernel),16m(dtb),1m(misc),-(rootfs) "
+#else
+#define MFG_NAND_PARTITION ""
+#endif
+
+#define CFG_MFG_ENV_SETTINGS \
+	"mfgtool_args=setenv bootargs console=${console},${baudrate} " \
+		"rdinit=/linuxrc " \
+		"g_mass_storage.stall=0 g_mass_storage.removable=1 " \
+		"g_mass_storage.file=/fat g_mass_storage.ro=1 " \
+		"g_mass_storage.idVendor=0x066F g_mass_storage.idProduct=0x37FF "\
+		"g_mass_storage.iSerialNumber=\"\" "\
+		MFG_NAND_PARTITION \
+		"clk_ignore_unused "\
+		"\0" \
+	"initrd_addr=0x83800000\0" \
+	"initrd_high=0xffffffff\0" \
+	"bootcmd_mfg=run mfgtool_args;bootz ${loadaddr} ${initrd_addr} ${fdt_addr};\0" \
+
+#if defined(CONFIG_NAND_BOOT)
 #define CFG_EXTRA_ENV_SETTINGS \
+	CFG_MFG_ENV_SETTINGS \
+	"splashimage=" __stringify(CONFIG_SYS_LOAD_ADDR) "\0" \
+	"videomode=video=ctfb:x:480,y:272,depth:24,pclk:108695,le:8,ri:4,up:2,lo:4,hs:41,vs:10,sync:0,vmode:0\0" \
+	"fdt_addr=0x83000000\0" \
+	"console=ttymxc0\0" \
+	"bootargs=console=ttymxc0,115200 ubi.mtd=4 "  \
+		"root=ubi0:rootfs rootfstype=ubifs "		     \
+		"mtdparts=gpmi-nand:64m(boot),16m(kernel),16m(dtb),1m(misc),-(rootfs)\0"\
+	"bootcmd=nand read ${loadaddr} 0x4000000 0xc00000;"\
+		"nand read ${fdt_addr} 0x5000000 0x100000;"\
+		"bootz ${loadaddr} - ${fdt_addr}\0"
+
+#else
+#define CFG_EXTRA_ENV_SETTINGS \
+	CFG_MFG_ENV_SETTINGS \
 	"script=boot.scr\0" \
 	"image=zImage\0" \
 	"console=ttymxc0\0" \
@@ -102,6 +138,8 @@
 					"echo WARNING: Could not determine dtb to use; fi; " \
 			"fi;\0" \
 
+#endif
+
 /* Miscellaneous configurable options */
 
 /* Physical Memory Map */
@@ -111,18 +149,7 @@
 #define CFG_SYS_INIT_RAM_ADDR	IRAM_BASE_ADDR
 #define CFG_SYS_INIT_RAM_SIZE	IRAM_SIZE
 
-/* environment organization */
-
-#ifdef CONFIG_CMD_NET
-#define CFG_FEC_ENET_DEV		1
-
-#if (CFG_FEC_ENET_DEV == 0)
-#define CFG_FEC_MXC_PHYADDR          0x2
-#elif (CFG_FEC_ENET_DEV == 1)
-#define CFG_FEC_MXC_PHYADDR		0x1
-#endif
-#endif
-
-#define MXS_LCDIF_BASE MX6UL_LCDIF1_BASE_ADDR
+/* NAND stuff */
+#define CFG_SYS_NAND_BASE		0x40000000
 
 #endif
