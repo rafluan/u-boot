@@ -88,7 +88,7 @@
 	"fdt_file=undefined\0" \
 	"fdt_addr=0x83000000\0" \
 	"tee_addr=0x84000000\0" \
-	"tee_file=uTee-6ullevk\0" \
+	"tee_file=undefined\0" \
 	"boot_fdt=try\0" \
 	"ip_dyn=yes\0" \
 	"splashimage=" __stringify(CONFIG_SYS_LOAD_ADDR) "\0" \
@@ -129,6 +129,7 @@
 		"root=/dev/nfs " \
 	"ip=dhcp nfsroot=${serverip}:${nfsroot},v3,tcp\0" \
 		"netboot=echo Booting from net ...; " \
+		"${usb_net_cmd}; " \
 		"run netargs; " \
 		"if test ${ip_dyn} = yes; then " \
 			"setenv get_cmd dhcp; " \
@@ -165,6 +166,18 @@
 					"setenv fdt_file imx6ull-14x14-evk.dtb; fi; " \
 				"if test $fdt_file = undefined; then " \
 					"echo WARNING: Could not determine dtb to use; " \
+				"fi; " \
+			"fi;\0" \
+		"findtee="\
+			"if test $tee_file = undefined; then " \
+				"if test $board_name = ULZ-EVK && test $board_rev = 14X14; then " \
+					"setenv tee_file uTee-6ulzevk; fi; " \
+				"if test $board_name = EVK && test $board_rev = 9X9; then " \
+					"setenv tee_file uTee-6ullevk; fi; " \
+				"if test $board_name = EVK && test $board_rev = 14X14; then " \
+					"setenv tee_file uTee-6ullevk; fi; " \
+				"if test $tee_file = undefined; then " \
+					"echo WARNING: Could not determine tee to use; " \
 				"fi; " \
 			"fi;\0" \
 
