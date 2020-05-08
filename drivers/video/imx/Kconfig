@@ -24,3 +24,19 @@ config IMX_LDB
 config IMX_LCDIF
 	bool "i.MX LCDIFv3 LCD controller"
 	depends on MACH_IMX
+
+config VIDEO_IMX_HDP_LOAD
+	bool "i.MX8 HDMI/DP firmware loading"
+	default n
+	depends on IMX8QM
+	help
+	  Support for HDMI/DP firmware loading for i.MX8QM processors. The
+	  firmware is copied from system memory to the HDMI/DP IRAM and
+	  DRAM memory.
+
+config VIDEO_IMX8_HDMI
+	bool "i.MX8 HDMI Splash screen"
+	default n
+	depends on VIDEO && IMX8M
+	help
+	  Support for HDMI i.MX8 processors.
