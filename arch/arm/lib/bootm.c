@@ -32,6 +32,7 @@
 #include <bootm.h>
 #include <vxworks.h>
 #include <asm/cache.h>
+#include <video_link.h>
 
 #ifdef CONFIG_ARMV7_NONSEC
 #include <asm/armv7.h>
@@ -60,6 +61,10 @@ static void announce_and_cleanup(int fake)
 	bootstage_stash_default();
 #ifdef CONFIG_BOOTSTAGE_REPORT
 	bootstage_report();
+#endif
+
+#if defined(CONFIG_VIDEO_LINK)
+	video_link_shut_down();
 #endif
 
 	board_quiesce_devices();
