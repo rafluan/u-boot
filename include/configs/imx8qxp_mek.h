@@ -47,7 +47,7 @@
 	AHAB_ENV \
 	"script=boot.scr\0" \
 	"image=Image\0" \
-	"panel=NULL\0" \
+	"splashimage=0x9e000000\0" \
 	"console=ttyLP0\0" \
 	"fdt_addr=0x83000000\0"			\
 	"cntr_addr=0x98000000\0"			\
