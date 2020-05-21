@@ -18,6 +18,7 @@
 #include <env.h>
 #include <imx_thermal.h>
 #include <fsl_sec.h>
+#include <fsl_wdog.h>
 #include <asm/setup.h>
 #include <linux/delay.h>
 
@@ -419,3 +420,15 @@ void reset_misc(void)
 #endif
 }
 
+#if !CONFIG_IS_ENABLED(SYSRESET)
+void reset_cpu(ulong addr)
+{
+	struct watchdog_regs *wdog = (struct watchdog_regs *)WDOG1_BASE_ADDR;
+
+	/* Clear WDA to trigger WDOG_B immediately */
+	writew(SET_WCR_WT(1) | WCR_WDT | WCR_WDE | WCR_SRS, &wdog->wcr);
+
+	while (1)
+		;
+}
+#endif
