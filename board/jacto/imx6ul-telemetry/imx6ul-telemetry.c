@@ -22,6 +22,8 @@
 #include <mmc.h>
 #include <usb.h>
 #include <usb/ehci-ci.h>
+#include <miiphy.h>
+#include <netdev.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -48,6 +50,33 @@ static iomux_v3_cfg_t const uart1_pads[] = {
 static void setup_iomux_uart(void)
 {
 	imx_iomux_v3_setup_multiple_pads(uart1_pads, ARRAY_SIZE(uart1_pads));
+}
+
+static int setup_fec(void)
+{
+	struct iomuxc *const iomuxc_regs = (struct iomuxc *)IOMUXC_BASE_ADDR;
+	int ret;
+
+	clrsetbits_le32(&iomuxc_regs->gpr[1], IOMUX_GPR1_FEC1_MASK,
+			IOMUX_GPR1_FEC1_CLOCK_MUX1_SEL_MASK);
+
+	ret = enable_fec_anatop_clock(0, ENET_50MHZ);
+	if (ret)
+		return ret;
+
+	enable_enet_clk(1);
+
+	return 0;
+}
+
+int board_phy_config(struct phy_device *phydev)
+{
+	phy_write(phydev, MDIO_DEVAD_NONE, 0x1f, 0x8190);
+
+	if (phydev->drv->config)
+		phydev->drv->config(phydev);
+
+	return 0;
 }
 
 #ifdef CONFIG_SPL_BUILD
@@ -140,6 +169,7 @@ int board_init(void)
 {
 	/* Address of boot parameters */
 	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
+	setup_fec();
 #ifdef CONFIG_USB_EHCI_MX6
 #ifndef CONFIG_DM_USB
 	setup_usb();
