@@ -832,6 +832,11 @@ int32_t ipu_init_sync_panel(struct ipu_di_config *di, ipu_di_signal_cfg_t sig)
 	}
 	rounded_pixel_clk =
 		clk_round_rate(ctx->pixel_clk[disp], di->pixel_clk_rate);
+	if (rounded_pixel_clk == 0) {
+		debug("IPU_DISP:  get round rate error\n");
+		return -EINVAL;
+	}
+
 	clk_set_rate(ctx->pixel_clk[disp], rounded_pixel_clk);
 	udelay(5000);
 	/* Get integer portion of divider */
