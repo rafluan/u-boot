@@ -50,7 +50,6 @@
 	"initrd_high=0xffffffff\0" \
 	"fdt_file=imx6ul-telemetry-r1.dtb\0" \
 	"fdt_addr=0x83000000\0" \
-	"silent=yes\0" \
 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
 	"mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
 	"loadbootscript=" \
