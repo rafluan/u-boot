@@ -17,8 +17,27 @@
 #include <dm/lists.h>
 #include <bootm.h>
 #include <asm/sections.h>
+#include <asm/mach-imx/boot_mode.h>
 
 DECLARE_GLOBAL_DATA_PTR;
+
+int spl_board_boot_device(enum boot_device boot_dev_spl)
+{
+	switch (boot_dev_spl) {
+	case MMC1_BOOT:
+		return BOOT_DEVICE_MMC1;
+	case SD2_BOOT:
+		return BOOT_DEVICE_MMC2_2;
+	case FLEXSPI_BOOT:
+		return BOOT_DEVICE_SPI;
+	case NAND_BOOT:
+		return BOOT_DEVICE_NAND;
+	case USB_BOOT:
+		return BOOT_DEVICE_BOARD;
+	default:
+		return BOOT_DEVICE_NONE;
+	}
+}
 
 void spl_board_init(void)
 {
