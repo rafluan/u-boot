@@ -15,7 +15,6 @@
  * (C) Copyright 2004-2010 Freescale Semiconductor, Inc.
  */
 
-#include "../videomodes.h"
 #include "display.h"
 #include "ipu.h"
 #include "ipu_regs.h"
