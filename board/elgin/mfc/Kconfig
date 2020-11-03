@@ -1,0 +1,14 @@
+if TARGET_AM335X_MFC
+
+config SYS_BOARD
+	default "mfc"
+
+config SYS_VENDOR
+	default "elgin"
+
+config SYS_SOC
+	default "am33xx"
+
+config SYS_CONFIG_NAME
+	default "am335x_mfc"
+endif

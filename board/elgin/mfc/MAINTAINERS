@@ -1,0 +1,6 @@
+ELGIN MFC BOARD
+M:	Otavio Salvador <otavio@ossystems.com.br>
+S:	Maintained
+F:	board/elgin/mfc
+F:	include/configs/am335x_mfc.h
+F:	arch/arm/dts/am335x-mfc.dts
