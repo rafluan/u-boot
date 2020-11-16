@@ -239,6 +239,15 @@ config TARGET_DISPLAY5
 	select SUPPORT_SPL
 	imply CMD_DM
 
+config TARGET_DISPLAY700
+	bool "i.MX6DL DISPLAY700"
+	select BOARD_EARLY_INIT_F
+	select DM
+	select DM_THERMAL
+	select MX6QDL
+	select SUPPORT_SPL
+	imply CMD_DM
+
 config TARGET_EMBESTMX6BOARDS
 	bool "embestmx6boards"
 	select BOARD_LATE_INIT
@@ -722,6 +731,7 @@ source "board/freescale/mx6sxsabreauto/Kconfig"
 source "board/freescale/mx6ul_14x14_evk/Kconfig"
 source "board/freescale/mx6ullevk/Kconfig"
 source "board/grinn/liteboard/Kconfig"
+source "board/jacto/omni700/Kconfig"
 source "board/phytec/pcm058/Kconfig"
 source "board/phytec/pfla02/Kconfig"
 source "board/phytec/pcl063/Kconfig"
