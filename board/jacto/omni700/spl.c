@@ -14,6 +14,7 @@
 #include <asm/io.h>
 #include <asm/arch/sys_proto.h>
 #include <spl.h>
+#include <init.h>
 
 #if defined(CONFIG_SPL_BUILD)
 
