@@ -4,6 +4,7 @@
 #include <env.h>
 #include <linux/errno.h>
 #include <asm/mach-imx/video.h>
+#include <log.h>
 
 #ifdef CONFIG_IMX_HDMI
 #include <asm/arch/mxc_hdmi.h>
@@ -33,7 +34,7 @@ int board_video_skip(void)
 		}
 		if (!panel) {
 			panel = displays[0].mode.name;
-			printf("No panel detected: default to %s\n", panel);
+			debug("No panel detected: default to %s\n", panel);
 			i = 0;
 		}
 	} else {
