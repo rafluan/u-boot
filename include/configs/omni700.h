@@ -47,6 +47,8 @@
 #define CONFIG_EXTRA_ENV_SETTINGS \
     CONFIG_MFG_ENV_SETTINGS \
 	"console=ttymxc2\0" \
+	"splashpos=0,0\0" \
+	"splashimage=0x11000000\0" \
 	"fdt_file=" CONFIG_DEFAULT_FDT_FILE "\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
@@ -95,4 +97,12 @@
 #define CONFIG_BOARD_SIZE_LIMIT		715776
 #define CONFIG_SYS_MMC_ENV_DEV		0
 
+/* Framebuffer */
+#define CONFIG_VIDEO_BMP_RLE8
+#define CONFIG_SPLASH_SCREEN
+#define CONFIG_SPLASH_SCREEN_ALIGN
+#define CONFIG_BMP_16BPP
+#define CONFIG_VIDEO_LOGO
+#define CONFIG_VIDEO_BMP_LOGO
+#define CONFIG_IMX_VIDEO_SKIP
 #endif			       /* __CONFIG_H * */
