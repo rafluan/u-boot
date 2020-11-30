@@ -11,6 +11,7 @@
 #include <asm/mach-imx/video.h>
 #include <asm/io.h>
 #include <common.h>
+#include <linux/delay.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -20,6 +21,7 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define LVDS_ENABLE	IMX_GPIO_NR(4, 7)
 #define LVDS_PWM	IMX_GPIO_NR(1, 9)
+#define BUZZER_GPIO	IMX_GPIO_NR(1, 1)
 
 int dram_init(void)
 {
@@ -47,6 +49,10 @@ static void setup_iomux_lcd(void)
 {
 	SETUP_IOMUX_PADS(lcd_pads);
 }
+
+static iomux_v3_cfg_t const buzzer_pads[] = {
+	IOMUX_PADS(PAD_GPIO_1__GPIO1_IO01 | MUX_PAD_CTRL(NO_PAD_CTRL)),
+};
 
 int board_early_init_f(void)
 {
@@ -144,9 +150,20 @@ int overwrite_console(void)
 	return 1;
 }
 
+static void play_beep(unsigned int duration)
+{
+	SETUP_IOMUX_PADS(buzzer_pads);
+	gpio_request(BUZZER_GPIO, "BUZZER_GPIO");
+	gpio_direction_output(BUZZER_GPIO, 1);
+	mdelay(duration);
+	gpio_direction_output(BUZZER_GPIO, 0);
+}
+
 int board_init(void)
 {
 	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
+
+	play_beep(150);
 
 #if defined(CONFIG_VIDEO_IPUV3)
 	setup_display();
