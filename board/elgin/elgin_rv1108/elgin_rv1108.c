@@ -51,6 +51,7 @@ int mach_cpu_init(void)
 #define LCD_BACKLIGHT_GPIO	104
 #define MODEM_ENABLE_GPIO	111
 #define MAXIM_RESET_GPIO	117
+#define VER0_GPIO		116  /* GPIO3_C4 = 3 * 32 + 20 = 116 */
 
 int rk_board_late_init(void)
 {
@@ -62,6 +63,14 @@ int rk_board_late_init(void)
 	
 	gpio_request(MAXIM_RESET_GPIO, "maxim_reset");
 	gpio_direction_output(MAXIM_RESET_GPIO, 1);
+
+	gpio_request(VER0_GPIO, "ver0_gpio");
+	gpio_direction_input(VER0_GPIO);
+
+	if (gpio_get_value(VER0_GPIO))
+		printf("Board version: with battery, no Wifi\n");
+	else
+		printf("Board version: without battery, with Wifi\n");
 
 	return 0;
 }
