@@ -673,6 +673,11 @@ int gpt_verify_partitions(struct blk_desc *desc,
  */
 int get_disk_guid(struct blk_desc *desc, char *guid);
 
+#if defined(CONFIG_DUAL_BOOTLOADER) && defined(CONFIG_SPL_BUILD)
+int part_get_info_efi_by_name(struct blk_desc *dev_desc, const char *name,
+			struct disk_partition *info);
+#endif
+
 /**
  * part_get_gpt_pte() - Get the GPT partition table entry of a partition
  *
@@ -686,7 +691,6 @@ int get_disk_guid(struct blk_desc *desc, char *guid);
  * Return:	0 on success, otherwise error
  */
 int part_get_gpt_pte(struct blk_desc *desc, int part, gpt_entry *gpt_e);
-
 #endif
 
 #if CONFIG_IS_ENABLED(DOS_PARTITION)
