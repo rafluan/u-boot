@@ -366,7 +366,7 @@ const char *bootdelay_process(void)
 	} else
 #endif /* CONFIG_POST */
 	if (bootcount_error())
-		s = env_get("altbootcmd");
+		s = env_get("bootcmd");
 	else
 		s = env_get("bootcmd");
 
