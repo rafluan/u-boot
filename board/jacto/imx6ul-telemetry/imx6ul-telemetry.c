@@ -165,10 +165,27 @@ int board_early_init_f(void)
 	return 0;
 }
 
+#define IGNITION_PWR_EN	IMX_GPIO_NR(2, 11)
+
+static iomux_v3_cfg_t const ignition_pads[] = {
+	IOMUX_PADS(PAD_ENET2_TX_DATA0__GPIO2_IO11 | MUX_PAD_CTRL(NO_PAD_CTRL)),
+};
+
+
+static void enable_ignition_pwr_en(void)
+{
+	SETUP_IOMUX_PADS(ignition_pads);
+	gpio_request(IGNITION_PWR_EN, "Ignition Power Enable");
+	gpio_direction_output(IGNITION_PWR_EN, 1);
+}
+
 int board_init(void)
 {
 	/* Address of boot parameters */
 	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
+
+    enable_ignition_pwr_en();
+
 	setup_fec();
 #ifdef CONFIG_USB_EHCI_MX6
 #ifndef CONFIG_DM_USB
