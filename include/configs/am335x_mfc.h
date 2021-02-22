@@ -29,16 +29,11 @@
 #ifndef CONFIG_SPL_BUILD
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
-	"bootpart=0:2\0" \
-	"bootdir=/boot\0" \
-	"bootfile=zImage\0" \
 	"fdtfile=am335x-mfc.dtb\0" \
-	"console=ttyO0,115200n8\0" \
-	"partitions=" \
-		"uuid_disk=${uuid_gpt_disk};" \
-		"name=bootloader,start=384K,size=1792K," \
-			"uuid=${uuid_gpt_bootloader};" \
-		"name=rootfs,start=2688K,size=-,uuid=${uuid_gpt_rootfs}\0"
+	"bootargs=console=ttyS0,115200n8 root=/dev/mmcblk0p2 rw rootfstype=ext4 rootwait\0" \
+	"fdtaddr=0x88000000\0" \
+	"loadaddr=0x82000000\0" \
+	"bootcmd=load mmc 0:1 $loadaddr zImage; load mmc 0:1 $fdtaddr $fdtfile; bootz ${loadaddr} - ${fdtaddr}\0"
 #endif
 
 /* NS16550 Configuration */
