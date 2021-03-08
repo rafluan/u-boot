@@ -98,38 +98,66 @@ const struct dpll_params *get_dpll_mpu_params(void)
 	return &dpll_mpu_opp[ind][0];
 }
 
-void scale_vcores_generic(int freq)
+static void scale_vcores_tps65217(int freq)
 {
-	struct ctrl_dev *cdev = (struct ctrl_dev *)CTRL_DEVICE_BASE;
-	int sil_rev, mpu_vdd;
+	int usb_cur_lim, mpu_vdd;
 
-	/*
-	 * The GP EVM, IDK and EVM SK use a TPS65910 PMIC.  For all
-	 * MPU frequencies we support we use a CORE voltage of
-	 * 1.10V.  For MPU voltage we need to switch based on
-	 * the frequency we are running at.
-	 */
-	if (power_tps65910_init(0))
+	if (power_tps65217_init(0))
 		return;
 
-	/*
-	 * Depending on MPU clock and PG we will need a different
-	 * VDD to drive at that speed.
-	 */
-	sil_rev = readl(&cdev->deviceid) >> 28;
-	mpu_vdd = am335x_get_tps65910_mpu_vdd(sil_rev, freq);
+	switch (freq) {
+	case MPUPLL_M_1000:
+		mpu_vdd = TPS65217_DCDC_VOLT_SEL_1325MV;
+		usb_cur_lim = TPS65217_USB_INPUT_CUR_LIMIT_1800MA;
+		break;
+	case MPUPLL_M_800:
+		mpu_vdd = TPS65217_DCDC_VOLT_SEL_1275MV;
+		usb_cur_lim = TPS65217_USB_INPUT_CUR_LIMIT_1300MA;
+		break;
+	case MPUPLL_M_720:
+		mpu_vdd = TPS65217_DCDC_VOLT_SEL_1200MV;
+		usb_cur_lim = TPS65217_USB_INPUT_CUR_LIMIT_1300MA;
+		break;
+	case MPUPLL_M_600:
+	case MPUPLL_M_500:
+	case MPUPLL_M_300:
+	default:
+		mpu_vdd = TPS65217_DCDC_VOLT_SEL_1100MV;
+		usb_cur_lim = TPS65217_USB_INPUT_CUR_LIMIT_1300MA;
+		break;
+	}
 
-	/* Tell the TPS65910 to use i2c */
-	tps65910_set_i2c_control();
+	if (tps65217_reg_write(TPS65217_PROT_LEVEL_NONE,
+			       TPS65217_POWER_PATH,
+			       usb_cur_lim,
+			       TPS65217_USB_INPUT_CUR_LIMIT_MASK))
+		puts("tps65217_reg_write failure\n");
 
-	/* First update MPU voltage. */
-	if (tps65910_voltage_update(MPU, mpu_vdd))
+	/* Set DCDC3 (CORE) voltage to 1.10V */
+	if (tps65217_voltage_update(TPS65217_DEFDCDC3,
+				    TPS65217_DCDC_VOLT_SEL_1100MV)) {
+		puts("tps65217_voltage_update failure\n");
 		return;
+	}
 
-	/* Second, update the CORE voltage. */
-	if (tps65910_voltage_update(CORE, TPS65910_OP_REG_SEL_1_1_0))
+	/* Set DCDC2 (MPU) voltage */
+	if (tps65217_voltage_update(TPS65217_DEFDCDC2, mpu_vdd)) {
+		puts("tps65217_voltage_update failure\n");
 		return;
+	}
 
+	/* Set LDO3, LDO4 output voltage to 3.3V */
+	if (tps65217_reg_write(TPS65217_PROT_LEVEL_2,
+			       TPS65217_DEFLS1,
+			       TPS65217_LDO_VOLTAGE_OUT_3_3,
+			       TPS65217_LDO_MASK))
+		puts("tps65217_reg_write failure\n");
+
+	if (tps65217_reg_write(TPS65217_PROT_LEVEL_2,
+			       TPS65217_DEFLS2,
+			       TPS65217_LDO_VOLTAGE_OUT_3_3,
+			       TPS65217_LDO_MASK))
+		puts("tps65217_reg_write failure\n");
 }
 
 void gpi2c_init(void)
@@ -150,7 +178,7 @@ void scale_vcores(void)
 
 	gpi2c_init();
 	freq = am335x_get_efuse_mpu_max_freq(cdev);
-	scale_vcores_generic(freq);
+	scale_vcores_tps65217(freq);
 }
 
 void set_uart_mux_conf(void)
