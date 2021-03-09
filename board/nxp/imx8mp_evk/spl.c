@@ -96,7 +96,6 @@ int board_fit_config_name_match(const char *name)
 }
 #endif
 
-/* Do not use BSS area in this phase */
 void board_init_f(ulong dummy)
 {
 	int ret;
@@ -122,4 +121,6 @@ void board_init_f(ulong dummy)
 
 	/* DDR initialization */
 	spl_dram_init();
+
+	board_init_r(NULL, 0);
 }
