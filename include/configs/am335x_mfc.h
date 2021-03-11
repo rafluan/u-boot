@@ -28,12 +28,31 @@
 
 #ifndef CONFIG_SPL_BUILD
 
+/*
+ * UpdateHub configuration
+ */
+
+/* Environment */
+#define UPDATEHUB_LOAD_OS_A     "load mmc 0:2 ${loadaddr} /boot/zImage; " \
+                                "load mmc 0:2 ${fdtaddr} /boot/${fdtfile}"
+#define UPDATEHUB_FIND_ROOT_A   "part uuid mmc 0:2 uuid"
+
+#define UPDATEHUB_LOAD_OS_B     "load mmc 0:3 ${loadaddr} /boot/zImage; " \
+                                "load mmc 0:3 ${fdtaddr} /boot/${fdtfile}"
+#define UPDATEHUB_FIND_ROOT_B   "part uuid mmc 0:3 uuid"
+
+#define UPDATEHUB_BOOTARGS      "console=ttyS0,115200n8 root=PARTUUID=${uuid} " \
+                                "rootfstype=ext4 rootwait rw"
+#define UPDATEHUB_BOOTCMD       "bootz ${loadaddr} - ${fdtaddr}"
+
+#include <configs/updatehub-common.h>
+
+#undef CONFIG_EXTRA_ENV_SETTINGS
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"fdtfile=am335x-mfc.dtb\0" \
-	"bootargs=console=ttyS0,115200n8 root=/dev/mmcblk0p2 rw rootfstype=ext4 rootwait\0" \
 	"fdtaddr=0x88000000\0" \
 	"loadaddr=0x82000000\0" \
-	"bootcmd=load mmc 0:1 $loadaddr zImage; load mmc 0:1 $fdtaddr $fdtfile; bootz ${loadaddr} - ${fdtaddr}\0"
+	UPDATEHUB_ENV
 #endif
 
 /* NS16550 Configuration */
