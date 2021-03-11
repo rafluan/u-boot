@@ -24,6 +24,9 @@
 #include <usb/ehci-ci.h>
 #include <miiphy.h>
 #include <netdev.h>
+#include <power/pmic.h>
+#include <power/pfuze3000_pmic.h>
+#include "../../freescale/common/pfuze.h"
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -178,6 +181,39 @@ static void enable_ignition_pwr_en(void)
 	gpio_request(IGNITION_PWR_EN, "Ignition Power Enable");
 	gpio_direction_output(IGNITION_PWR_EN, 1);
 }
+
+#ifdef CONFIG_DM_PMIC
+int power_init_board(void)
+{
+	struct udevice *dev;
+	int ret, dev_id, rev_id;
+
+	ret = pmic_get("pfuze3000@8", &dev);
+	if (ret < 0)
+		return ret;
+
+	dev_id = pmic_reg_read(dev, PFUZE3000_DEVICEID);
+	rev_id = pmic_reg_read(dev, PFUZE3000_REVID);
+	printf("PMIC: PFUZE3000 DEV_ID=0x%x REV_ID=0x%x\n", dev_id, rev_id);
+
+	/* disable Low Power Mode during standby mode */
+	pmic_reg_write(dev, PFUZE3000_LDOGCTL, 0x1);
+
+	/* SW1B step ramp up time from 2us to 4us/25mV */
+	pmic_reg_write(dev, PFUZE3000_SW1BCONF, 0x40);
+
+	/* SW1B mode to APS/PFM */
+	pmic_reg_write(dev, PFUZE3000_SW1BMODE, 0xc);
+
+	/* SW1B standby voltage set to 0.975V */
+	pmic_reg_write(dev, PFUZE3000_SW1BSTBY, 0xb);
+
+	/* SW1B voltage set to 1.400V */
+	pmic_reg_write(dev, PFUZE3000_SW1BVOLT, 0x1c);
+
+	return 0;
+}
+#endif
 
 int board_init(void)
 {
