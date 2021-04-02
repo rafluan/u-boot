@@ -71,6 +71,13 @@ static void enable_lvds(struct display_info_t const *dev)
 	gpio_direction_output(LVDS_PWM, 1);
 }
 
+void board_preboot_os(void)
+{
+	/* Keep LCD turned off to prevent color flicker when Linux boots */
+	gpio_direction_output(LVDS_ENABLE, 1);
+	gpio_direction_output(LVDS_PWM, 0);
+}
+
 struct display_info_t const displays[] = {{
 	.bus	= -1,
 	.addr	= 0,
