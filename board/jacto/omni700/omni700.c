@@ -12,6 +12,7 @@
 #include <asm/io.h>
 #include <common.h>
 #include <linux/delay.h>
+#include <splash.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -56,6 +57,7 @@ static iomux_v3_cfg_t const buzzer_pads[] = {
 
 int board_early_init_f(void)
 {
+	select_ldb_di_clock_source(MXC_PLL2_PFD0_CLK);
 	setup_iomux_uart();
 	setup_iomux_lcd();
 	return 0;
@@ -70,6 +72,13 @@ static void enable_lvds(struct display_info_t const *dev)
 	gpio_direction_output(LVDS_PWM, 1);
 }
 
+void board_preboot_os(void)
+{
+	/* Keep LCD turned off to prevent color flicker when Linux boots */
+	gpio_direction_output(LVDS_ENABLE, 1);
+	gpio_direction_output(LVDS_PWM, 0);
+}
+
 struct display_info_t const displays[] = {{
 	.bus	= -1,
 	.addr	= 0,
@@ -81,13 +90,13 @@ struct display_info_t const displays[] = {{
 		.refresh        = 60,
 		.xres           = 800,
 		.yres           = 480,
-		.pixclock       = 30066,
-		.left_margin    = 40,
-		.right_margin   = 33,
-		.upper_margin   = 10,
-		.lower_margin   = 33,
-		.hsync_len      = 128,
-		.vsync_len      = 2,
+		.pixclock       = 15384,
+		.left_margin    = 160,
+		.right_margin   = 24,
+		.upper_margin   = 29,
+		.lower_margin   = 3,
+		.hsync_len      = 136,
+		.vsync_len      = 6,
 		.sync           = FB_SYNC_EXT,
 		.vmode          = FB_VMODE_NONINTERLACED
 } } };
@@ -105,14 +114,6 @@ static void setup_display(void)
 	reg = readl(&mxc_ccm->CCGR3);
 	reg |=  MXC_CCM_CCGR3_LDB_DI0_MASK | MXC_CCM_CCGR3_LDB_DI1_MASK;
 	writel(reg, &mxc_ccm->CCGR3);
-
-	/* set LDB0, LDB1 clk select to 011/011 */
-	reg = readl(&mxc_ccm->cs2cdr);
-	reg &= ~(MXC_CCM_CS2CDR_LDB_DI0_CLK_SEL_MASK
-		 | MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_MASK);
-	reg |= (3 << MXC_CCM_CS2CDR_LDB_DI0_CLK_SEL_OFFSET)
-	      | (3 << MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_OFFSET);
-	writel(reg, &mxc_ccm->cs2cdr);
 
 	reg = readl(&mxc_ccm->cscmr2);
 	reg |= MXC_CCM_CSCMR2_LDB_DI0_IPU_DIV | MXC_CCM_CSCMR2_LDB_DI1_IPU_DIV;
@@ -144,6 +145,23 @@ static void setup_display(void)
 	writel(reg, &iomux->gpr[3]);
 }
 #endif /* CONFIG_VIDEO_IPUV3 */
+
+#ifdef CONFIG_SPLASH_SCREEN
+static struct splash_location default_splash_locations[] = {
+	{
+		.name		= "mmc_fs",
+		.storage	= SPLASH_STORAGE_MMC,
+		.flags		= SPLASH_STORAGE_FS,
+		.devpart	= "0:1",
+	},
+};
+
+int splash_screen_prepare(void)
+{
+	return splash_source_load(default_splash_locations,
+				   ARRAY_SIZE(default_splash_locations));
+}
+#endif
 
 int overwrite_console(void)
 {
