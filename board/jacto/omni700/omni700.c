@@ -81,7 +81,7 @@ void board_preboot_os(void)
 struct display_info_t const displays[] = {{
 	.bus	= -1,
 	.addr	= 0,
-	.pixfmt	= IPU_PIX_FMT_RGB666,
+	.pixfmt	= IPU_PIX_FMT_LVDS666,
 	.detect	= NULL,
 	.enable	= enable_lvds,
 	.mode	= {
@@ -91,12 +91,12 @@ struct display_info_t const displays[] = {{
 		.yres           = 480,
 		.pixclock       = 30066,
 		.left_margin    = 40,
-		.right_margin   = 33,
+		.right_margin   = 88,
 		.upper_margin   = 10,
 		.lower_margin   = 33,
 		.hsync_len      = 128,
 		.vsync_len      = 2,
-		.sync           = FB_SYNC_EXT,
+		.sync           = 0,
 		.vmode          = FB_VMODE_NONINTERLACED
 } } };
 size_t display_count = ARRAY_SIZE(displays);
@@ -105,51 +105,79 @@ static void setup_display(void)
 {
 	struct mxc_ccm_reg *mxc_ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
 	struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
+	s32 timeout = 100000;
 	int reg;
 
 	enable_ipu_clock();
 
-	/* Turn on LDB0, LDB1, IPU,IPU DI0 clocks */
+	setbits_le32(&mxc_ccm->CCGR3, MXC_CCM_CCGR3_IPU1_IPU_DI0_MASK);
+
+	/* Turn off LDB1, IPU1 DI0 clock */
 	reg = readl(&mxc_ccm->CCGR3);
-	reg |=  MXC_CCM_CCGR3_LDB_DI0_MASK | MXC_CCM_CCGR3_LDB_DI1_MASK;
+	reg &= ~MXC_CCM_CCGR3_LDB_DI1_MASK;
 	writel(reg, &mxc_ccm->CCGR3);
 
-	/* set LDB0, LDB1 clk select to 011/011 */
+	/* set PLL5 clock */
+	reg = readl(&mxc_ccm->analog_pll_video);
+	reg |= BM_ANADIG_PLL_VIDEO_POWERDOWN;
+	writel(reg, &mxc_ccm->analog_pll_video);
+
+	/* set PLL5 to 931280000Hz (24 * (38 + (19280000/24000000))) */
+	reg &= ~BM_ANADIG_PLL_VIDEO_DIV_SELECT;
+	reg |= BF_ANADIG_PLL_VIDEO_DIV_SELECT(38);
+	reg &= ~BM_ANADIG_PLL_VIDEO_POST_DIV_SELECT;
+	reg |= BF_ANADIG_PLL_VIDEO_POST_DIV_SELECT(0);
+	writel(reg, &mxc_ccm->analog_pll_video);
+
+	writel(BF_ANADIG_PLL_VIDEO_NUM_A(19280000),
+	       &mxc_ccm->analog_pll_video_num);
+	writel(BF_ANADIG_PLL_VIDEO_DENOM_B(24000000),
+	       &mxc_ccm->analog_pll_video_denom);
+
+	reg &= ~BM_ANADIG_PLL_VIDEO_POWERDOWN;
+	writel(reg, &mxc_ccm->analog_pll_video);
+
+	while (timeout--)
+		if (readl(&mxc_ccm->analog_pll_video) & BM_ANADIG_PLL_VIDEO_LOCK)
+			break;
+	if (timeout < 0)
+		printf("Warning: video pll lock timeout!\n");
+
+	reg = readl(&mxc_ccm->analog_pll_video);
+	reg |= BM_ANADIG_PLL_VIDEO_ENABLE;
+	reg &= ~BM_ANADIG_PLL_VIDEO_BYPASS;
+	writel(reg, &mxc_ccm->analog_pll_video);
+
+	/* set LDB1 clk parent to PLL5 */
 	reg = readl(&mxc_ccm->cs2cdr);
-	reg &= ~(MXC_CCM_CS2CDR_LDB_DI0_CLK_SEL_MASK
-		 | MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_MASK);
-	reg |= (3 << MXC_CCM_CS2CDR_LDB_DI0_CLK_SEL_OFFSET)
-	      | (3 << MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_OFFSET);
+	reg &= ~MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_MASK;
+	reg |=  (0 << MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_OFFSET);
 	writel(reg, &mxc_ccm->cs2cdr);
 
 	reg = readl(&mxc_ccm->cscmr2);
-	reg |= MXC_CCM_CSCMR2_LDB_DI0_IPU_DIV | MXC_CCM_CSCMR2_LDB_DI1_IPU_DIV;
+	reg |= MXC_CCM_CSCMR2_LDB_DI1_IPU_DIV;
 	writel(reg, &mxc_ccm->cscmr2);
 
 	reg = readl(&mxc_ccm->chsccdr);
-	reg |= (CHSCCDR_CLK_SEL_LDB_DI0
-		<< MXC_CCM_CHSCCDR_IPU1_DI0_CLK_SEL_OFFSET);
-	reg |= (CHSCCDR_CLK_SEL_LDB_DI0
-		<< MXC_CCM_CHSCCDR_IPU1_DI1_CLK_SEL_OFFSET);
+	reg &= ~(MXC_CCM_CHSCCDR_IPU1_DI0_PRE_CLK_SEL_MASK |
+		 MXC_CCM_CHSCCDR_IPU1_DI0_PODF_MASK |
+		 MXC_CCM_CHSCCDR_IPU1_DI0_CLK_SEL_MASK);
+	reg |= (4 << MXC_CCM_CHSCCDR_IPU1_DI0_PRE_CLK_SEL_OFFSET) |
+	       (2 << MXC_CCM_CHSCCDR_IPU1_DI0_PODF_OFFSET) |
+	       (4 << MXC_CCM_CHSCCDR_IPU1_DI0_CLK_SEL_OFFSET);
 	writel(reg, &mxc_ccm->chsccdr);
 
-	reg = IOMUXC_GPR2_BGREF_RRMODE_EXTERNAL_RES
-	     | IOMUXC_GPR2_DI1_VS_POLARITY_ACTIVE_LOW
-	     | IOMUXC_GPR2_DI0_VS_POLARITY_ACTIVE_LOW
-	     | IOMUXC_GPR2_BIT_MAPPING_CH1_SPWG
-	     | IOMUXC_GPR2_DATA_WIDTH_CH1_18BIT
-	     | IOMUXC_GPR2_BIT_MAPPING_CH0_SPWG
-	     | IOMUXC_GPR2_DATA_WIDTH_CH0_18BIT
-	     | IOMUXC_GPR2_LVDS_CH0_MODE_DISABLED
-	     | IOMUXC_GPR2_LVDS_CH1_MODE_ENABLED_DI0;
-	writel(reg, &iomux->gpr[2]);
+	writel(0x40c, &iomux->gpr[2]);
 
 	reg = readl(&iomux->gpr[3]);
-	reg = (reg & ~(IOMUXC_GPR3_LVDS1_MUX_CTL_MASK
-			| IOMUXC_GPR3_HDMI_MUX_CTL_MASK))
-	    | (IOMUXC_GPR3_MUX_SRC_IPU1_DI0
-	       << IOMUXC_GPR3_LVDS1_MUX_CTL_OFFSET);
+	reg &= ~(IOMUXC_GPR3_LVDS1_MUX_CTL_MASK | IOMUXC_GPR3_HDMI_MUX_CTL_MASK);
+	reg |= (IOMUXC_GPR3_MUX_SRC_IPU1_DI0 << IOMUXC_GPR3_LVDS1_MUX_CTL_OFFSET);
 	writel(reg, &iomux->gpr[3]);
+
+	/* Turn on LDB1, IPU1 DI0 clock */
+	reg = readl(&mxc_ccm->CCGR3);
+	reg |= MXC_CCM_CCGR3_LDB_DI1_MASK;
+	writel(reg, &mxc_ccm->CCGR3);
 }
 #endif /* CONFIG_VIDEO_IPUV3 */
 
