@@ -57,6 +57,7 @@ static iomux_v3_cfg_t const buzzer_pads[] = {
 
 int board_early_init_f(void)
 {
+	select_ldb_di_clock_source(MXC_PLL5_CLK);
 	setup_iomux_uart();
 	setup_iomux_lcd();
 	return 0;
@@ -147,12 +148,6 @@ static void setup_display(void)
 	reg |= BM_ANADIG_PLL_VIDEO_ENABLE;
 	reg &= ~BM_ANADIG_PLL_VIDEO_BYPASS;
 	writel(reg, &mxc_ccm->analog_pll_video);
-
-	/* set LDB1 clk parent to PLL5 */
-	reg = readl(&mxc_ccm->cs2cdr);
-	reg &= ~MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_MASK;
-	reg |=  (0 << MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_OFFSET);
-	writel(reg, &mxc_ccm->cs2cdr);
 
 	reg = readl(&mxc_ccm->cscmr2);
 	reg |= MXC_CCM_CSCMR2_LDB_DI1_IPU_DIV;
