@@ -136,7 +136,6 @@ void board_init_f(ulong dummy)
 	arch_cpu_init();
 	ccgr_init();
 	gpr_init();
-	board_early_init_f();
 	timer_init();
 	preloader_console_init();
 	memset(__bss_start, 0, __bss_end - __bss_start);
