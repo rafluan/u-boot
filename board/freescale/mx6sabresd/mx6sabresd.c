@@ -10,7 +10,7 @@
 #include <asm/arch/imx-regs.h>
 #include <asm/arch/iomux.h>
 #include <asm/arch/mx6-pins.h>
-#include <asm/errno.h>
+#include <linux/errno.h>
 #include <asm/gpio.h>
 #include <asm/imx-common/mxc_i2c.h>
 #include <asm/imx-common/iomux-v3.h>
@@ -30,6 +30,7 @@
 #include "../common/pfuze.h"
 #include <asm/arch/mx6-ddr.h>
 #include <usb.h>
+#include <splash.h>
 #if defined(CONFIG_MX6DL) && defined(CONFIG_MXC_EPDC)
 #include <lcd.h>
 #include <mxc_epdc_fb.h>
@@ -78,6 +79,8 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define DISP0_PWR_EN	IMX_GPIO_NR(1, 21)
 
+#define BUZZER	IMX_GPIO_NR(1, 1)
+
 int dram_init(void)
 {
 	gd->ram_size = imx_ddr_size();
@@ -92,31 +95,36 @@ static iomux_v3_cfg_t const uart1_pads[] = {
 static iomux_v3_cfg_t const enet_pads[] = {
 	MX6_PAD_ENET_MDIO__ENET_MDIO		| MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX6_PAD_ENET_MDC__ENET_MDC		| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_TXC__RGMII_TXC	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_TD0__RGMII_TD0	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_TD1__RGMII_TD1	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_TD2__RGMII_TD2	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_TD3__RGMII_TD3	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_TX_CTL__RGMII_TX_CTL	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_ENET_REF_CLK__ENET_TX_CLK	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_RXC__RGMII_RXC	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_RD0__RGMII_RD0	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_RD1__RGMII_RD1	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_RD2__RGMII_RD2	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_RD3__RGMII_RD3	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_RX_CTL__RGMII_RX_CTL	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	/* AR8031 PHY Reset */
-	MX6_PAD_ENET_CRS_DV__GPIO1_IO25		| MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_ENET_CRS_DV__ENET_RX_EN	| MUX_PAD_CTRL(ENET_PAD_CTRL),
+	MX6_PAD_ENET_RX_ER__ENET_RX_ER	| MUX_PAD_CTRL(ENET_PAD_CTRL),
+	MX6_PAD_ENET_RXD0__ENET_RX_DATA0	| MUX_PAD_CTRL(ENET_PAD_CTRL),
+	MX6_PAD_ENET_RXD1__ENET_RX_DATA1	| MUX_PAD_CTRL(ENET_PAD_CTRL),
+	MX6_PAD_ENET_TX_EN__ENET_TX_EN	| MUX_PAD_CTRL(ENET_PAD_CTRL),
+	MX6_PAD_ENET_TXD0__ENET_TX_DATA0	| MUX_PAD_CTRL(ENET_PAD_CTRL),
+	MX6_PAD_ENET_TXD1__ENET_TX_DATA1	| MUX_PAD_CTRL(ENET_PAD_CTRL),
+	MX6_PAD_KEY_COL2__GPIO4_IO10	| MUX_PAD_CTRL(ENET_PAD_CTRL),
+	MX6_PAD_GPIO_16__ENET_REF_CLK	| MUX_PAD_CTRL(ENET_PAD_CTRL),
+	/* KSZ8081 PHY Reset */
+	MX6_PAD_KEY_ROW1__GPIO4_IO09		| MUX_PAD_CTRL(NO_PAD_CTRL),
 };
 
 static void setup_iomux_enet(void)
 {
 	imx_iomux_v3_setup_multiple_pads(enet_pads, ARRAY_SIZE(enet_pads));
 
+	struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
+
+	/* Set the GPR bit */
+	int reg = readl(&iomux->gpr[1]);
+
+        reg |= IOMUXC_GPR1_ENET_CLK_SEL_MASK;
+
+        writel(reg, &iomux->gpr[1]);
+
 	/* Reset AR8031 PHY */
-	gpio_direction_output(IMX_GPIO_NR(1, 25) , 0);
+	gpio_direction_output(IMX_GPIO_NR(4, 9) , 0);
 	mdelay(10);
-	gpio_set_value(IMX_GPIO_NR(1, 25), 1);
+	gpio_set_value(IMX_GPIO_NR(4, 9), 1);
 	udelay(100);
 }
 
@@ -165,7 +173,7 @@ static iomux_v3_cfg_t const usdhc4_pads[] = {
 static iomux_v3_cfg_t const ecspi1_pads[] = {
 	MX6_PAD_KEY_COL0__ECSPI1_SCLK | MUX_PAD_CTRL(SPI_PAD_CTRL),
 	MX6_PAD_KEY_COL1__ECSPI1_MISO | MUX_PAD_CTRL(SPI_PAD_CTRL),
-	MX6_PAD_KEY_ROW0__ECSPI1_MOSI | MUX_PAD_CTRL(SPI_PAD_CTRL),
+	//MX6_PAD_KEY_ROW0__ECSPI1_MOSI | MUX_PAD_CTRL(SPI_PAD_CTRL),
 	MX6_PAD_KEY_ROW1__GPIO4_IO09 | MUX_PAD_CTRL(NO_PAD_CTRL),
 };
 
@@ -179,6 +187,11 @@ int board_spi_cs_gpio(unsigned bus, unsigned cs)
 	return (bus == 0 && cs == 0) ? (IMX_GPIO_NR(4, 9)) : -1;
 }
 #endif
+
+static iomux_v3_cfg_t const pwr_pads[] = {
+	MX6_PAD_KEY_ROW0__GPIO4_IO07 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_GPIO_9__GPIO1_IO09 | MUX_PAD_CTRL(NO_PAD_CTRL),
+};
 
 static iomux_v3_cfg_t const rgb_pads[] = {
 	MX6_PAD_DI0_DISP_CLK__IPU1_DI0_DISP_CLK | MUX_PAD_CTRL(NO_PAD_CTRL),
@@ -618,7 +631,7 @@ int mx6_rgmii_rework(struct phy_device *phydev)
 	unsigned short val;
 
 	/* To enable AR8031 ouput a 125MHz clk from CLK_25M */
-	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x7);
+	/*phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x7);
 	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, 0x8016);
 	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x4007);
 
@@ -626,12 +639,19 @@ int mx6_rgmii_rework(struct phy_device *phydev)
 	val &= 0xffe3;
 	val |= 0x18;
 	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, val);
+	*/
 
 	/* introduce tx clock delay */
+	/*
 	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x5);
 	val = phy_read(phydev, MDIO_DEVAD_NONE, 0x1e);
 	val |= 0x0100;
 	phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, val);
+	*/
+
+	/* Escreve configurações para usar clock de 50 MHz */
+	phy_write(phydev, MDIO_DEVAD_NONE, 0x1f, 0x8180);
+	phy_write(phydev, MDIO_DEVAD_NONE, 0x16, 0x02);
 
 	return 0;
 }
@@ -676,7 +696,7 @@ static void enable_lvds(struct display_info_t const *dev)
 }
 
 struct display_info_t const displays[] = {{
-	.bus	= -1,
+	.bus	= 1,
 	.addr	= 0,
 	.pixfmt	= IPU_PIX_FMT_RGB666,
 	.detect	= NULL,
@@ -684,8 +704,8 @@ struct display_info_t const displays[] = {{
 	.mode	= {
 		.name           = "Hannstar-XGA",
 		.refresh        = 60,
-		.xres           = 1024,
-		.yres           = 768,
+		.xres           = 800,
+		.yres           = 480,
 		.pixclock       = 15385,
 		.left_margin    = 220,
 		.right_margin   = 40,
@@ -759,8 +779,8 @@ static void setup_display(void)
 	reg = readl(&mxc_ccm->cs2cdr);
 	reg &= ~(MXC_CCM_CS2CDR_LDB_DI0_CLK_SEL_MASK
 		 | MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_MASK);
-	reg |= (3 << MXC_CCM_CS2CDR_LDB_DI0_CLK_SEL_OFFSET)
-	      | (3 << MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_OFFSET);
+	reg |= (1 << MXC_CCM_CS2CDR_LDB_DI0_CLK_SEL_OFFSET)
+	      | (1 << MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_OFFSET);
 	writel(reg, &mxc_ccm->cs2cdr);
 
 	reg = readl(&mxc_ccm->cscmr2);
@@ -810,9 +830,16 @@ static void setup_fec(void)
 
 		/* select ENET MAC0 TX clock from PLL */
 		imx_iomux_set_gpr_register(5, 9, 1, 1);
-		ret = enable_fec_anatop_clock(0, ENET_125MHZ);
+		ret = enable_fec_anatop_clock(0, ENET_50MHZ);
 		if (ret)
 		    printf("Error fec anatop clock settings!\n");
+	}
+	if(is_cpu_type(MXC_CPU_MX6DL))
+	{
+		int ret;
+		ret = enable_fec_anatop_clock(0, ENET_50MHZ);
+		if (ret)
+			printf("Error fec anatop clock settings!\n");
 	}
 }
 
@@ -897,10 +924,69 @@ int board_early_init_f(void)
 	return 0;
 }
 
+static iomux_v3_cfg_t const buzzer_pads[] = {
+	MX6_PAD_GPIO_1__GPIO1_IO01 | MUX_PAD_CTRL(NO_PAD_CTRL),
+};
+
+static struct splash_location splash_locations[] = {
+	{
+		.name = "mmc_fs",
+		.storage = SPLASH_STORAGE_MMC,
+		.flags = SPLASH_STORAGE_FS,
+		.devpart = "2:1",
+	},
+};
+
+static void show_splash()
+{
+	unsigned long addr;
+	char *s;
+
+	if ((s = getenv("splashimage")) == NULL)
+		return;
+
+	if ((addr = simple_strtoul(s, NULL, 16)) == 0)
+		return;
+
+	if (!splash_source_load(splash_locations, ARRAY_SIZE(splash_locations)))
+		video_display_bitmap(addr, 0, 0);
+}
+
+static int display_on()
+{
+	imx_iomux_v3_setup_multiple_pads(pwr_pads, ARRAY_SIZE(pwr_pads));
+
+	/* display power ON */
+	gpio_request(IMX_GPIO_NR(4, 7), "display_power");
+	gpio_direction_output(IMX_GPIO_NR(4, 7) , 0);
+
+	/* load splash image */
+	show_splash();
+
+	/* display backlight ON */
+	gpio_request(IMX_GPIO_NR(1, 9), "display_backlight");
+	gpio_direction_output(IMX_GPIO_NR(1, 9) , 1);
+}
+
+static void beep()
+{
+	imx_iomux_v3_setup_multiple_pads(buzzer_pads, ARRAY_SIZE(buzzer_pads));
+
+	gpio_request(BUZZER, "buzzer");
+
+	gpio_direction_output(BUZZER, 0);
+
+	gpio_set_value(BUZZER, 1);
+	mdelay(150);
+	gpio_set_value(BUZZER, 0);
+}
+
 int board_init(void)
 {
 	/* address of boot parameters */
 	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
+
+	beep();
 
 #ifdef CONFIG_MXC_SPI
 	setup_spi();
@@ -931,6 +1017,11 @@ int power_init_board(void)
 	struct pmic *pfuze;
 	unsigned int reg;
 	int ret;
+
+	/* Pula inicialização do PFUZE */
+	return 0;
+
+#if 0
 
 	pfuze = pfuze_common_init(I2C_PMIC);
 	if (!pfuze)
@@ -1007,7 +1098,7 @@ int power_init_board(void)
 		reg |= 0x40;
 		pmic_reg_write(pfuze, PFUZE100_SW1CCONF, reg);
 	}
-
+#endif
 	return 0;
 }
 
@@ -1151,6 +1242,8 @@ int board_late_init(void)
 #ifdef CONFIG_ENV_IS_IN_MMC
 	board_late_mmc_env_init();
 #endif
+
+	display_on();
 
 	return 0;
 }

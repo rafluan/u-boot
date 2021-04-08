@@ -53,13 +53,13 @@
 #define CONFIG_CMD_BMODE
 
 #ifdef CONFIG_SYS_BOOT_NAND
-#define CONFIG_MFG_NAND_PARTITION "mtdparts=gpmi-nand:64m(boot),16m(kernel),16m(dtb),1m(misc),-(rootfs) "
+#define CONFIG_MFG_NAND_PARTITION "mtdparts=gpmi-nand:64m(boot),16m(kernel),16m(dtb),-(rootfs) "
 #else
 #define CONFIG_MFG_NAND_PARTITION ""
 #endif
 
 #define CONFIG_MFG_ENV_SETTINGS \
-	"mfgtool_args=setenv bootargs console=" CONFIG_CONSOLE_DEV ",115200 " \
+	"mfgtool_args=setenv bootargs console=" CONSOLE_DEV ",115200 " \
 		"rdinit=/linuxrc " \
 		"g_mass_storage.stall=0 g_mass_storage.removable=1 " \
 		"g_mass_storage.file=/fat g_mass_storage.ro=1 " \
@@ -108,9 +108,9 @@
 	CONFIG_MFG_ENV_SETTINGS \
 	"fdt_addr=0x18000000\0" \
 	"fdt_high=0xffffffff\0"	  \
-	"bootargs=console=" CONFIG_CONSOLE_DEV ",115200 ubi.mtd=5 "  \
+	"bootargs=console=" CONFIG_CONSOLE_DEV ",115200 ubi.mtd=4 "  \
 		"root=ubi0:rootfs rootfstype=ubifs "		     \
-		"mtdparts=gpmi-nand:64m(boot),16m(kernel),16m(dtb),1m(misc),-(rootfs)\0"\
+		"mtdparts=gpmi-nand:64m(boot),16m(kernel),16m(dtb),-(rootfs)\0"\
 	"bootcmd=nand read ${loadaddr} 0x4000000 0x800000;"\
 		"nand read ${fdt_addr} 0x5000000 0x100000;"\
 		"bootz ${loadaddr} - ${fdt_addr}\0"
@@ -134,14 +134,15 @@
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	CONFIG_MFG_ENV_SETTINGS \
-	"epdc_waveform=epdc_splash.bin\0" \
+	"splashpos=m,m\0" \
+	"splashimage=0x1C000000\0" \
 	"script=boot.scr\0" \
 	"image=zImage\0" \
-	"fdt_file=undefined\0" \
+	"fdt_file=imx6dl-sabresd.dtb\0" \
 	"fdt_addr=0x18000000\0" \
-	"boot_fdt=try\0" \
+	"boot_fdt=yes\0" \
 	"ip_dyn=yes\0" \
-	"console=" CONFIG_CONSOLE_DEV "\0" \
+	"console=" CONSOLE_DEV "\0" \
 	"dfuspi=dfu 0 sf 0:0:10000000:0\0" \
 	"dfu_alt_info_spl=spl raw 0x400\0" \
 	"dfu_alt_info_img=u-boot raw 0x10000\0" \
@@ -150,7 +151,7 @@
 	"initrd_high=0xffffffff\0" \
 	"mmcdev=" __stringify(CONFIG_SYS_MMC_ENV_DEV) "\0" \
 	"mmcpart=1\0" \
-	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
+	"mmcroot=/dev/mmcblk3p2 rootwait ro\0" \
 	"mmcautodetect=yes\0" \
 	"update_sd_firmware=" \
 		"if test ${ip_dyn} = yes; then " \
@@ -167,14 +168,15 @@
 		"fi\0" \
 	EMMC_ENV	  \
 	"smp=" CONFIG_SYS_NOSMP "\0"\
+	"video_config=video=mxcfb1:dev=hdmi,1920x1080M@60,if=RGB24 video=mxcfb0:dev=ldb,800x480M@60,if=RGB666 \0"\
 	"mmcargs=setenv bootargs console=${console},${baudrate} ${smp} " \
-		"root=${mmcroot}\0" \
+		"root=/dev/mmcblk3p2 rootwait ro ${video_config} vt.global_cursor_default=0\0" \
 	"loadbootscript=" \
 		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
 	"bootscript=echo Running bootscript from mmc ...; " \
 		"source\0" \
-	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
-	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
+	"loadimage=ext2load mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
+	"loadfdt=ext2load mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
 		"run mmcargs; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
@@ -234,7 +236,6 @@
 
 
 #define CONFIG_BOOTCOMMAND \
-	"run findfdt;" \
 	"mmc dev ${mmcdev};" \
 	"if mmc rescan; then " \
 		"if run loadbootscript; then " \
@@ -369,19 +370,24 @@
 #endif
 
 /* I2C Configs */
-#define CONFIG_CMD_I2C
+#ifndef CONFIG_DM_I2C
 #define CONFIG_SYS_I2C
+#endif
+#ifdef CONFIG_CMD_I2C
 #define CONFIG_SYS_I2C_MXC
 #define CONFIG_SYS_I2C_MXC_I2C1		/* enable I2C bus 1 */
 #define CONFIG_SYS_I2C_MXC_I2C2		/* enable I2C bus 2 */
 #define CONFIG_SYS_I2C_MXC_I2C3		/* enable I2C bus 3 */
 #define CONFIG_SYS_I2C_SPEED		100000
+#endif
 
 /* PMIC */
+#ifndef CONFIG_DM_PMIC
 #define CONFIG_POWER
 #define CONFIG_POWER_I2C
 #define CONFIG_POWER_PFUZE100
 #define CONFIG_POWER_PFUZE100_I2C_ADDR	0x08
+#endif
 
 /* Framebuffer */
 #define CONFIG_VIDEO
@@ -406,7 +412,7 @@
 
 #if defined(CONFIG_ANDROID_SUPPORT)
 #include "mx6sabreandroid_common.h"
-#else
+#elif 0
 
 #ifndef CONFIG_SPL
 #define CONFIG_CI_UDC
@@ -424,6 +430,7 @@
 #define CONFIG_G_DNL_MANUFACTURER	"FSL"
 
 /* USB Device Firmware Update support */
+#if 0
 #define CONFIG_CMD_DFU
 #define CONFIG_USB_FUNCTION_DFU
 #define CONFIG_DFU_MMC
@@ -431,6 +438,8 @@
 #define CONFIG_DFU_SF
 #endif
 #endif
+#endif
+
 
 #endif /* CONFIG_ANDROID_SUPPORT */
 
