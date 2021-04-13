@@ -16,6 +16,7 @@
 #include <asm/unaligned.h>
 #include <mapmem.h>
 #include <linux/libfdt.h>
+#include <linux/sizes.h>
 #include <asm/bootm.h>
 #include <asm/mach-imx/boot_mode.h>
 #include <asm/arch/sys_proto.h>
@@ -1388,4 +1389,33 @@ bool image_arm64(void *images)
 	if (ih->magic == le32_to_cpu(ARM64_IMAGE_MAGIC))
 		return true;
 	return false;
+}
+
+uint32_t kernel_size(void *images)
+{
+	struct header_image *ih;
+	uint32_t image_size;
+
+	ih = (struct header_image *)images;
+	image_size = le64_to_cpu(ih->image_size);
+
+	return image_size;
+}
+
+ulong kernel_relocate_addr(ulong images)
+{
+	struct header_image *ih;
+	ulong relocated_addr, text_offset;
+
+	ih = (struct header_image *)images;
+	text_offset = le64_to_cpu(ih->text_offset);
+
+	if (le64_to_cpu(ih->res1) & BIT(3))
+		relocated_addr = images - text_offset;
+	else
+		relocated_addr = gd->bd->bi_dram[0].start;
+
+	relocated_addr = ALIGN(relocated_addr, SZ_2M) + text_offset;
+
+	return relocated_addr;
 }
