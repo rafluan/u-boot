@@ -125,6 +125,16 @@
 	"ramdisk_addr_r=0x12200000\0" \
 	"scriptaddr=0x17000000\0"
 
+#define CONFIG_MFG_ENV_SETTINGS                                    \
+	"mfgtool_args=setenv bootargs console=${console},${baudrate} " \
+		"rdinit=/linuxrc " \
+		"g_mass_storage.stall=0 g_mass_storage.removable=1 " \
+		"g_mass_storage.idVendor=0x066F g_mass_storage.idProduct=0x37FF "\
+		"g_mass_storage.iSerialNumber=\"\" "\
+		"clk_ignore_unused "\
+		"\0" \
+	"bootcmd_mfg=run mfgtool_args; bootz ${kernel_addr_r} ${ramdisk_addr_r} ${fdt_addr_r}\0"
+
 #ifndef CONFIG_TDX_APALIS_IMX6_V1_0
 #define FDT_FILE "imx6q-apalis-eval.dtb"
 #define FDT_FILE_V1_0 "imx6q-apalis_v1_0-eval.dtb"
@@ -132,6 +142,7 @@
 #define FDT_FILE "imx6q-apalis_v1_0-eval.dtb"
 #endif
 #define CONFIG_EXTRA_ENV_SETTINGS \
+    CONFIG_MFG_ENV_SETTINGS \
 	BOOTENV \
 	"boot_script_dhcp=boot.scr\0" \
 	"bootcmd=run distro_bootcmd ; " \
