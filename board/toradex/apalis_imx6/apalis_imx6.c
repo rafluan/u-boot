@@ -449,13 +449,13 @@ static iomux_v3_cfg_t const rgb_pads[] = {
 	MX6_PAD_EIM_DA11__IPU1_DI1_PIN02 | MUX_PAD_CTRL(OUTPUT_RGB),
 	MX6_PAD_EIM_DA12__IPU1_DI1_PIN03 | MUX_PAD_CTRL(OUTPUT_RGB),
 	MX6_PAD_EIM_DA9__IPU1_DISP1_DATA00 | MUX_PAD_CTRL(OUTPUT_RGB),
-	MX6_PAD_EIM_DA8__IPU1_DISP1_DATA01 | MUX_PAD_CTRL(OUTPUT_RGB),
-	MX6_PAD_EIM_DA7__IPU1_DISP1_DATA02 | MUX_PAD_CTRL(OUTPUT_RGB),
-	MX6_PAD_EIM_DA6__IPU1_DISP1_DATA03 | MUX_PAD_CTRL(OUTPUT_RGB),
-	MX6_PAD_EIM_DA5__IPU1_DISP1_DATA04 | MUX_PAD_CTRL(OUTPUT_RGB),
-	MX6_PAD_EIM_DA4__IPU1_DISP1_DATA05 | MUX_PAD_CTRL(OUTPUT_RGB),
-	MX6_PAD_EIM_DA3__IPU1_DISP1_DATA06 | MUX_PAD_CTRL(OUTPUT_RGB),
-	MX6_PAD_EIM_DA2__IPU1_DISP1_DATA07 | MUX_PAD_CTRL(OUTPUT_RGB),
+	//MX6_PAD_EIM_DA8__IPU1_DISP1_DATA01 | MUX_PAD_CTRL(OUTPUT_RGB),
+	//MX6_PAD_EIM_DA7__IPU1_DISP1_DATA02 | MUX_PAD_CTRL(OUTPUT_RGB),
+	//MX6_PAD_EIM_DA6__IPU1_DISP1_DATA03 | MUX_PAD_CTRL(OUTPUT_RGB),
+	//MX6_PAD_EIM_DA5__IPU1_DISP1_DATA04 | MUX_PAD_CTRL(OUTPUT_RGB),
+	//MX6_PAD_EIM_DA4__IPU1_DISP1_DATA05 | MUX_PAD_CTRL(OUTPUT_RGB),
+	//MX6_PAD_EIM_DA3__IPU1_DISP1_DATA06 | MUX_PAD_CTRL(OUTPUT_RGB),
+	//MX6_PAD_EIM_DA2__IPU1_DISP1_DATA07 | MUX_PAD_CTRL(OUTPUT_RGB),
 	MX6_PAD_EIM_DA1__IPU1_DISP1_DATA08 | MUX_PAD_CTRL(OUTPUT_RGB),
 	MX6_PAD_EIM_DA0__IPU1_DISP1_DATA09 | MUX_PAD_CTRL(OUTPUT_RGB),
 	MX6_PAD_EIM_EB1__IPU1_DISP1_DATA10 | MUX_PAD_CTRL(OUTPUT_RGB),
@@ -463,7 +463,7 @@ static iomux_v3_cfg_t const rgb_pads[] = {
 	MX6_PAD_EIM_A17__IPU1_DISP1_DATA12 | MUX_PAD_CTRL(OUTPUT_RGB),
 	MX6_PAD_EIM_A18__IPU1_DISP1_DATA13 | MUX_PAD_CTRL(OUTPUT_RGB),
 	MX6_PAD_EIM_A19__IPU1_DISP1_DATA14 | MUX_PAD_CTRL(OUTPUT_RGB),
-	MX6_PAD_EIM_A20__IPU1_DISP1_DATA15 | MUX_PAD_CTRL(OUTPUT_RGB),
+	//MX6_PAD_EIM_A20__IPU1_DISP1_DATA15 | MUX_PAD_CTRL(OUTPUT_RGB),
 	MX6_PAD_EIM_A21__IPU1_DISP1_DATA16 | MUX_PAD_CTRL(OUTPUT_RGB),
 	MX6_PAD_EIM_A22__IPU1_DISP1_DATA17 | MUX_PAD_CTRL(OUTPUT_RGB),
 	MX6_PAD_EIM_A23__IPU1_DISP1_DATA18 | MUX_PAD_CTRL(OUTPUT_RGB),
@@ -681,10 +681,69 @@ int overwrite_console(void)
 	return 1;
 }
 
+#define MODEM_USB_PWR IMX_GPIO_NR(2, 18)
+#define MODEM_ON_OFF IMX_GPIO_NR(3, 4)
+#define MODEM_HW_SHUTDOWN IMX_GPIO_NR(3, 5)
+#define SPEAKER_RESET IMX_GPIO_NR(2, 7)
+#define ADV7280_RESET IMX_GPIO_NR(3, 7)
+#define ADV7280_PWRDWN IMX_GPIO_NR(3, 6)
+
+static iomux_v3_cfg_t const modem_pads[] = {
+        MX6_PAD_EIM_DA2__GPIO3_IO02 | MUX_PAD_CTRL(NO_PAD_CTRL),
+        MX6_PAD_EIM_DA3__GPIO3_IO03 | MUX_PAD_CTRL(NO_PAD_CTRL),
+        MX6_PAD_EIM_DA4__GPIO3_IO04 | MUX_PAD_CTRL(NO_PAD_CTRL),
+        MX6_PAD_EIM_DA5__GPIO3_IO05 | MUX_PAD_CTRL(NO_PAD_CTRL),
+        MX6_PAD_EIM_A20__GPIO2_IO18 | MUX_PAD_CTRL(NO_PAD_CTRL),
+};
+
+static iomux_v3_cfg_t const speaker_pads[] = {
+        MX6_PAD_NANDF_D7__GPIO2_IO07 | MUX_PAD_CTRL(NO_PAD_CTRL),
+};
+
+static iomux_v3_cfg_t const adv7280_pads[] = {
+	MX6_PAD_EIM_DA7__GPIO3_IO07 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_EIM_DA6__GPIO3_IO06 | MUX_PAD_CTRL(NO_PAD_CTRL),
+};
+
+static void setup_modem_pads(void) {
+        imx_iomux_v3_setup_multiple_pads(modem_pads, ARRAY_SIZE(modem_pads));
+
+	gpio_request(MODEM_USB_PWR, "Modem USB Power");
+	gpio_direction_output(MODEM_USB_PWR, 0);
+
+	gpio_request(MODEM_ON_OFF, "Modem On-Off Control");
+	gpio_direction_output(MODEM_ON_OFF, 0);
+
+	gpio_request(MODEM_HW_SHUTDOWN, "Modem Hardware Shutdown");
+	gpio_direction_output(MODEM_HW_SHUTDOWN, 1);
+}
+
+static void setup_speaker_pads(void) {
+        imx_iomux_v3_setup_multiple_pads(speaker_pads, ARRAY_SIZE(speaker_pads));
+
+       gpio_request(SPEAKER_RESET, "Speaker Reset");
+       gpio_direction_output(SPEAKER_RESET, 0);
+}
+
+static void setup_adv7280_pads(void) {
+        imx_iomux_v3_setup_multiple_pads(adv7280_pads, ARRAY_SIZE(adv7280_pads));
+
+       gpio_request(ADV7280_RESET, "ADV7180 Reset");
+       gpio_direction_output(ADV7280_RESET, 0);
+
+       gpio_request(ADV7280_PWRDWN, "ADV7180 Power-Down");
+       gpio_direction_output(ADV7280_PWRDWN, 0);
+}
+
+
 int board_init(void)
 {
 	/* address of boot parameters */
 	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
+
+	setup_modem_pads();
+	setup_speaker_pads();
+	setup_adv7280_pads();
 
 #if defined(CONFIG_VIDEO_IPUV3)
 	setup_display();
