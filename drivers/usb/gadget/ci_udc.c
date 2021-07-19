@@ -1429,9 +1429,11 @@ static int ci_udc_phy_shutdown(struct ci_udc_priv_data *priv)
 #endif
 
 #if CONFIG_IS_ENABLED(POWER_DOMAIN)
-	ret = power_domain_off(&priv->phy_pd);
-	if (ret)
-		printf("Power down USB PHY failed! (error = %d)\n", ret);
+	if (priv->phy_pd.dev) {
+		ret = power_domain_off(&priv->phy_pd);
+		if (ret)
+			printf("Power down USB PHY failed! (error = %d)\n", ret);
+	}
 #endif
 	return ret;
 }
