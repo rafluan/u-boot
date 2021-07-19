@@ -9,6 +9,9 @@
 #include <asm/arch/imx8ulp-pins.h>
 #include <asm/arch/pcc.h>
 #include <asm/arch/sys_proto.h>
+#include <power-domain.h>
+#include <dt-bindings/power/imx8ulp-power.h>
+
 #if defined(CONFIG_NXP_FSPI) || defined(CONFIG_FSL_FSPI_NAND)
 #define FSPI_PAD_CTRL	(PAD_CTL_PUS_UP | PAD_CTL_DSE)
 static iomux_cfg_t const flexspi0_pads[] = {
@@ -162,4 +165,33 @@ int board_late_init(void)
 		memset((void *)addr, 0, 0x400);
 
 	return 0;
+}
+
+void board_quiesce_devices(void)
+{
+	/* Disable the power domains may used in u-boot before entering kernel */
+#if CONFIG_IS_ENABLED(POWER_DOMAIN)
+	struct udevice *scmi_devpd;
+	int ret, i;
+	struct power_domain pd;
+	ulong ids[] = {
+		IMX8ULP_PD_FLEXSPI2, IMX8ULP_PD_USB0, IMX8ULP_PD_USDHC0,
+		IMX8ULP_PD_USDHC1, IMX8ULP_PD_USDHC2_USB1, IMX8ULP_PD_DCNANO,
+		IMX8ULP_PD_MIPI_DSI};
+
+	ret = uclass_get_device(UCLASS_POWER_DOMAIN, 0, &scmi_devpd);
+	if (ret) {
+		printf("Cannot get scmi devpd: err=%d\n", ret);
+		return;
+	}
+
+	pd.dev = scmi_devpd;
+
+	for (i = 0; i < ARRAY_SIZE(ids); i++) {
+		pd.id = ids[i];
+		ret = power_domain_off(&pd);
+		if (ret)
+			printf("power_domain_off %lu failed: err=%d\n", ids[i], ret);
+	}
+#endif
 }
