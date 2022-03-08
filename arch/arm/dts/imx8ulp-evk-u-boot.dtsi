@@ -12,6 +12,33 @@
 		status = "okay";
 		bootph-all;
 	};
+
+	aliases {
+		spi0 = &flexspi0;
+		spi2 = &flexspi2;
+		i2c0 = &lpi2c0;
+		i2c7 = &lpi2c7;
+		usbphy0 = &usbphy1;
+		usb0 = &usbotg1;
+		usbphy1 = &usbphy2;
+		usb1 = &usbotg2;
+		usb_gadget0 = &usbg1;
+		usb_gadget1 = &usbg2;
+	};
+
+	usbg1: usbg1 {
+		compatible = "fsl,imx27-usb-gadget";
+		dr_mode = "peripheral";
+		chipidea,usb = <&usbotg1>;
+		status = "okay";
+	};
+
+	usbg2: usbg2 {
+		compatible = "fsl,imx27-usb-gadget";
+		dr_mode = "peripheral";
+		chipidea,usb = <&usbotg2>;
+		status = "okay";
+	};
 };
 
 &soc {
@@ -31,6 +58,7 @@
 };
 
 &per_bridge4 {
+	bootph-all;
 	bootph-pre-ram;
 };
 
@@ -52,4 +80,35 @@
 
 &pinctrl_usdhc0 {
 	bootph-pre-ram;
+};
+&usbotg1 {
+	compatible = "fsl,imx8ulp-usb", "fsl,imx7ulp-usb", "fsl,imx27-usb";
+};
+
+&usbotg2 {
+	compatible = "fsl,imx8ulp-usb", "fsl,imx7ulp-usb", "fsl,imx27-usb";
+};
+
+&pcal6408 {
+	compatible = "nxp,pcal9554b", "ti,tca6408";
+};
+
+&fec {
+	phy-reset-gpios = <&pcal6408 4 GPIO_ACTIVE_LOW>;
+};
+
+&scmi_buf {
+	reg = <0x0 0x1000>; /* Align page size */
+};
+
+&flexspi0 {
+	status = "okay";
+
+	flash0: atxp032@0 {
+		reg = <0>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "jedec,spi-nor";
+		spi-max-frequency = <66000000>;
+	};
 };

@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0+
 
+#include <dt-bindings/reset/imx8ulp-pcc-reset.h>
+#include <dt-bindings/reset/imx8ulp-sim-reset.h>
+
 #ifdef CONFIG_BINMAN
 / {
 	binman: binman {
@@ -61,3 +64,40 @@
 	};
 };
 #endif
+
+&soc {
+	per_bridge0: bus@28000000 {
+		compatible = "simple-bus";
+		reg = <0x28000000 0x80000>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		flexspi0: spi@28039000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "nxp,imx8ulp-fspi";
+			reg = <0x28039000 0x10000>,
+				<0x04000000 0x7ffffff>;
+			reg-names = "fspi_base", "fspi_mmap";
+			status = "disabled";
+		};
+	};
+};
+
+&per_bridge3 {
+	i3c2: i3c@29360000 {
+		compatible = "fsl,imx8ulp-i3c";
+		reg = <0x29360000 0x10000>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		interrupts = <GIC_SPI 96 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&pcc3 IMX8ULP_CLK_I3C2>,
+			 <&pcc3 IMX8ULP_CLK_I3C2>;
+		clock-names = "per", "ipg";
+		assigned-clocks = <&pcc3 IMX8ULP_CLK_I3C2>;
+		assigned-clock-parents = <&cgc1 IMX8ULP_CLK_FROSC_DIV2>;
+		assigned-clock-rates = <48000000>;
+		status = "disabled";
+	};
+};
