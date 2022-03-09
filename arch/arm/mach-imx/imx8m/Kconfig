@@ -86,6 +86,7 @@ config TARGET_IMX8MQ_EVK
 	select IMX8MQ
 	select IMX8M_LPDDR4
 	select FSL_CAAM
+	select FSL_BLOB
 	select ARCH_MISC_INIT
 	select SPL_CRYPTO if SPL
 	select CMD_REMOTEPROC
@@ -118,6 +119,7 @@ config TARGET_IMX8MM_EVK
 	select SUPPORT_SPL
 	select IMX8M_LPDDR4
 	select FSL_CAAM
+	select FSL_BLOB
 	select ARCH_MISC_INIT
 	select SPL_CRYPTO if SPL
 	select CMD_REMOTEPROC
@@ -134,6 +136,7 @@ config TARGET_IMX8MM_DDR4_EVK
 	select SUPPORT_SPL
 	select IMX8M_DDR4
 	select FSL_CAAM
+	select FSL_BLOB
 	select ARCH_MISC_INIT
 	select SPL_CRYPTO if SPL
 	imply OF_UPSTREAM
@@ -224,6 +227,7 @@ config TARGET_IMX8MN_EVK
 	select SUPPORT_SPL
 	select IMX8M_LPDDR4
 	select FSL_CAAM
+	select FSL_BLOB
 	select SPL_CRYPTO if SPL
 	select CMD_REMOTEPROC
 	select REMOTEPROC_IMX
@@ -239,6 +243,7 @@ config TARGET_IMX8MN_DDR4_EVK
 	select SUPPORT_SPL
 	select IMX8M_DDR4
 	select FSL_CAAM
+	select FSL_BLOB
 	select SPL_CRYPTO if SPL
 	select CMD_REMOTEPROC
 	select REMOTEPROC_IMX
@@ -254,6 +259,7 @@ config TARGET_IMX8MN_DDR3_EVK
 	select SUPPORT_SPL
 	select IMX8M_DDR3L
 	select FSL_CAAM
+	select FSL_BLOB
 	select SPL_CRYPTO if SPL
 	imply OF_UPSTREAM
 	imply BOOTSTD_FULL
@@ -283,6 +289,7 @@ config TARGET_IMX8MP_BEACON
 	select SUPPORT_SPL
 	select IMX8M_LPDDR4
 	select FSL_CAAM
+	select FSL_BLOB
 	select ARCH_MISC_INIT
 	select SPL_CRYPTO if SPL
 	imply OF_UPSTREAM
@@ -319,6 +326,7 @@ config TARGET_IMX8MP_EVK
 	select SUPPORT_SPL
 	select IMX8M_LPDDR4
 	select FSL_CAAM
+	select FSL_BLOB
 	select ARCH_MISC_INIT
 	select SPL_CRYPTO if SPL
 	select CMD_REMOTEPROC
@@ -354,6 +362,7 @@ config TARGET_IMX8MP_DDR4_EVK
 	select SUPPORT_SPL
 	select IMX8M_DDR4
 	select FSL_CAAM
+	select FSL_BLOB
 	select ARCH_MISC_INIT
 	select SPL_CRYPTO if SPL
 	imply BOOTSTD_FULL
