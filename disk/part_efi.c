@@ -252,7 +252,7 @@ int part_get_gpt_pte(struct blk_desc *desc, int part, gpt_entry *gpt_e)
 	if (part > le32_to_cpu(gpt_head->num_partition_entries) ||
 	    !is_pte_valid(&gpt_pte[part - 1])) {
 		log_debug("Invalid partition number %d\n", part);
-#if !defined(CONFIG_DUAL_BOOTLOADER) || !defined(CONFIG_SPL_BUILD)
+#if !(defined(CONFIG_DUAL_BOOTLOADER) || defined(CONFIG_IMX_TRUSTY_OS)) || !defined(CONFIG_SPL_BUILD)
 		free(gpt_pte);
 #endif
 		return -EPERM;
@@ -260,7 +260,7 @@ int part_get_gpt_pte(struct blk_desc *desc, int part, gpt_entry *gpt_e)
 
 	memcpy(gpt_e, &gpt_pte[part - 1], sizeof(*gpt_e));
 
-#if !defined(CONFIG_DUAL_BOOTLOADER) || !defined(CONFIG_SPL_BUILD)
+#if !(defined(CONFIG_DUAL_BOOTLOADER) || defined(CONFIG_IMX_TRUSTY_OS)) || !defined(CONFIG_SPL_BUILD)
 	free(gpt_pte);
 #endif
 	return 0;
@@ -303,7 +303,7 @@ static void __maybe_unused part_print_efi(struct blk_desc *desc)
 		printf("\tguid:\t%pUl\n", uuid);
 	}
 
-#if !defined(CONFIG_DUAL_BOOTLOADER) || !defined(CONFIG_SPL_BUILD)
+#if !(defined(CONFIG_DUAL_BOOTLOADER) || defined(CONFIG_IMX_TRUSTY_OS)) || !defined(CONFIG_SPL_BUILD)
 	/* Remember to free pte */
 	free(gpt_pte);
 #endif
@@ -349,7 +349,7 @@ static int __maybe_unused part_get_info_efi(struct blk_desc *desc, int part,
 	return 0;
 }
 
-#if defined(CONFIG_DUAL_BOOTLOADER) && defined(CONFIG_SPL_BUILD)
+#if (defined(CONFIG_DUAL_BOOTLOADER) || defined(CONFIG_IMX_TRUSTY_OS)) && defined(CONFIG_SPL_BUILD)
 int part_get_info_efi_by_name(struct blk_desc *dev_desc, const char *name,
 		      struct disk_partition *info)
 {
@@ -403,7 +403,7 @@ int part_get_info_efi_by_name(struct blk_desc *dev_desc, const char *name,
 
 	return -1;
 }
-#endif /* CONFIG_DUAL_BOOTLOADER && CONFIG_SPL_BUILD */
+#endif /* (CONFIG_DUAL_BOOTLOADER || CONFIG_IMX_TRUSTY_OS) && CONFIG_SPL_BUILD */
 
 static int part_test_efi(struct blk_desc *desc)
 {
@@ -1298,7 +1298,7 @@ static gpt_entry *alloc_read_gpt_entries(struct blk_desc *desc,
 	 * don't forget to free the memory after use.
 	 */
 	if (count != 0) {
-#if defined(CONFIG_DUAL_BOOTLOADER) && defined(CONFIG_SPL_BUILD)
+#if (defined(CONFIG_DUAL_BOOTLOADER) || defined(CONFIG_IMX_TRUSTY_OS)) && defined(CONFIG_SPL_BUILD)
 		pte = (gpt_entry *)CFG_SYS_SPL_PTE_RAM_BASE;
 #else
 		pte = memalign(ARCH_DMA_MINALIGN,
@@ -1317,7 +1317,7 @@ static gpt_entry *alloc_read_gpt_entries(struct blk_desc *desc,
 	blk_cnt = BLOCK_CNT(count, desc);
 	if (blk_dread(desc, blk, (lbaint_t)blk_cnt, pte) != blk_cnt) {
 		log_debug("Can't read GPT Entries\n");
-#if !defined(CONFIG_DUAL_BOOTLOADER) || !defined(CONFIG_SPL_BUILD)
+#if !(defined(CONFIG_DUAL_BOOTLOADER) || defined(CONFIG_IMX_TRUSTY_OS)) || !defined(CONFIG_SPL_BUILD)
 		free(pte);
 #endif
 		return NULL;
