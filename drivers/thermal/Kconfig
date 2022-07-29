@@ -43,6 +43,12 @@ config RCAR_GEN3_THERMAL
 	  Enable this to plug the R-Car Gen3/Gen4 or RZ/G2 thermal sensor
 	  driver into the U-Boot thermal framework.
 
+config SCMI_THERMAL
+	bool "SCMI Sensor based thermal driver"
+	select SCMI_FIRMWARE
+	help
+	  Enable SCMI Sensor protocol based thermal driver to get temperature.
+
 config TI_DRA7_THERMAL
         bool "Temperature sensor driver for TI dra7xx SOCs"
         help
