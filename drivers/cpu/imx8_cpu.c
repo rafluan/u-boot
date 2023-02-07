@@ -72,6 +72,10 @@ static const char *get_imx_type_str(u32 imxtype)
 		return "8MP Lite[4]";	/* Quad-core Lite version of the imx8mp */
 	case MXC_CPU_IMX8MP6:
 		return "8MP[6]";	/* Quad-core version of the imx8mp, NPU fused */
+	case MXC_CPU_IMX8MPSC:
+		return "8MP[8] SC"; 	/* Quad-core SC version of the imx8mp */
+	case MXC_CPU_IMX8MPDSC:
+		return "8MP Dual[3] SC";/* Dual-core SC version of the imx8mp */
 	case MXC_CPU_IMX8MQ:
 		return "8MQ";	/* Quad-core version of the imx8mq */
 	case MXC_CPU_IMX8MQL:
