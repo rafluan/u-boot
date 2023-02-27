@@ -100,7 +100,26 @@ struct dram_timing_info {
 
 extern struct dram_timing_info dram_timing;
 
-#if IS_ENABLED(CONFIG_IMX95) || IS_ENABLED(CONFIG_IMX94) /* CONFIG_IMX95 || CONFIG_IMX94 */
+#if IS_ENABLED(CONFIG_IMX93) || IS_ENABLED(CONFIG_IMX91)	/* CONFIG_IMX93 or CONFIG_IMX91 */
+#if IS_ENABLED(CONFIG_IMX_SNPS_DDR_PHY_QB_GEN)
+#define DDRPHY_QB_FSP_SIZE	3
+#define DDRPHY_QB_CSR_SIZE	1792
+#define DDRPHY_QB_FLAG_2D	BIT(0)	/* =1 if First boot used 2D training, =0 otherwise */
+struct ddrphy_qb_state {
+	uint32_t crc;
+	uint32_t flags;
+	uint32_t fsp[DDRPHY_QB_FSP_SIZE];
+	uint32_t csr[DDRPHY_QB_CSR_SIZE];
+};
+#define DDRPHY_QB_STATE_SIZE \
+	(sizeof(uint32_t) * (1 + DDRPHY_QB_FSP_SIZE + DDRPHY_QB_CSR_SIZE))
+
+extern struct ddrphy_qb_state qb_state;
+
+int ddrphy_qb_save(void);
+#endif
+
+#elif IS_ENABLED(CONFIG_IMX95) || IS_ENABLED(CONFIG_IMX94) /* CONFIG_IMX95 || CONFIG_IMX94 */
 #if IS_ENABLED(CONFIG_IMX_SNPS_DDR_PHY_QB_GEN)
 /* Quick Boot related */
 #define DDRPHY_QB_CSR_SIZE	5168
@@ -147,6 +166,8 @@ struct ddrphy_qb_state {
 	u16 acsm[DDRPHY_QB_ACSM_SIZE];
 	u16 pst[DDRPHY_QB_PST_SIZE];
 };
+#elif  defined(CONFIG_IMX_SNPS_DDR_PHY_QB)
+	#error "Quick Boot flow not supported in SPL for iMX95, please use DDR OEI!"
 #endif /* #if IS_ENABLED(CONFIG_IMX_SNPS_DDR_PHY_QB_GEN)  */
 #endif /* #if IS_ENABLED(CONFIG_IMX95) || IS_ENABLED(CONFIG_IMX94) */
 

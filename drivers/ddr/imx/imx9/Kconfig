@@ -35,6 +35,6 @@ config SAVED_QB_STATE_BASE
 	help
 	  Once DRAM is trained, need to save the dram related timing
 	  info into memory in order to be reachable from U-Boot.
-	default 0x8fe00000
+	default 0x83100000
 
 endmenu
