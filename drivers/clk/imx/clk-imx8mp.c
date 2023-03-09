@@ -199,6 +199,11 @@ static const char * const imx8mp_usdhc3_sels[] = {"osc_24m", "sys_pll1_400m", "s
 						  "audio_pll2_out", "sys_pll1_100m", };
 
 #if CONFIG_IS_ENABLED(VIDEO)
+static const char * const imx8mp_media_mipi_phy1_ref_sels[] = {"osc_24m", "sys_pll2_333m", "sys_pll2_100m",
+							       "sys_pll1_800m", "sys_pll2_1000m",
+							       "clk_ext2", "audio_pll2_out",
+							       "video_pll1_out", };
+
 static const char * const imx8mp_media_disp_pix_sels[] = {"osc_24m", "video_pll1_out", "audio_pll2_out",
 							  "audio_pll1_out", "sys_pll1_800m",
 							  "sys_pll2_1000m", "sys_pll3_out", "clk_ext4", };
@@ -370,6 +375,7 @@ static int imx8mp_clk_probe(struct udevice *dev)
 	clk_dm(IMX8MP_CLK_WDOG, imx8m_clk_composite(dev, "wdog", imx8mp_wdog_sels, base + 0xb900));
 	clk_dm(IMX8MP_CLK_USDHC3, imx8m_clk_composite(dev, "usdhc3", imx8mp_usdhc3_sels, base + 0xbc80));
 #if CONFIG_IS_ENABLED(VIDEO)
+	clk_dm(IMX8MP_CLK_MEDIA_MIPI_PHY1_REF, imx8m_clk_composite(dev, "media_mipi_phy1_ref", imx8mp_media_mipi_phy1_ref_sels, base + 0xbd80));
 	clk_dm(IMX8MP_CLK_MEDIA_DISP1_PIX, imx8m_clk_composite(dev, "media_disp1_pix", imx8mp_media_disp_pix_sels, base + 0xbe00));
 	clk_dm(IMX8MP_CLK_MEDIA_LDB, imx8m_clk_composite(dev, "media_ldb", imx8mp_media_ldb_sels, base + 0xbf00));
 #endif
@@ -421,6 +427,7 @@ static int imx8mp_clk_probe(struct udevice *dev)
 	clk_dm(IMX8MP_CLK_MEDIA_AXI_ROOT, imx_clk_gate2_shared2(dev, "media_axi_root_clk", "media_axi", base + 0x45d0, 0, &share_count_media));
 	clk_dm(IMX8MP_CLK_MEDIA_DISP1_PIX_ROOT, imx_clk_gate2_shared2(dev, "media_disp1_pix_root_clk", "media_disp1_pix", base + 0x45d0, 0, &share_count_media));
 	clk_dm(IMX8MP_CLK_MEDIA_DISP2_PIX_ROOT, imx_clk_gate2_shared2(dev, "media_disp2_pix_root_clk", "media_disp2_pix", base + 0x45d0, 0, &share_count_media));
+	clk_dm(IMX8MP_CLK_MEDIA_MIPI_PHY1_REF_ROOT, imx_clk_gate2_shared2(dev, "media_mipi_phy1_ref_root", "media_mipi_phy1_ref", base + 0x45d0, 0, &share_count_media));
 	clk_dm(IMX8MP_CLK_MEDIA_LDB_ROOT, imx_clk_gate2_shared2(dev, "media_ldb_root_clk", "media_ldb", base + 0x45d0, 0, &share_count_media));
 	clk_dm(IMX8MP_CLK_MEDIA_ISP_ROOT, imx_clk_gate2_shared2(dev, "media_isp_root_clk", "media_isp", base + 0x45d0, 0, &share_count_media));
 #endif
