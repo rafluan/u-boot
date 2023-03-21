@@ -16,6 +16,7 @@ config IMX9
 config IMX93
 	bool
 	select IMX9
+	select ARCH_MISC_INIT
 	select ARMV8_SPL_EXCEPTION_VECTORS
 
 config IMX91
