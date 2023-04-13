@@ -17,6 +17,12 @@
 #if IS_ENABLED(CONFIG_IMX_CRRM)
 #define IMG_TYPE_RECOVERY		0x09
 #endif
+#include <u-boot/lz4.h>
+#ifdef CONFIG_IMX_TRUSTY_OS
+#define TEE_DEST_SIZE   0x04000000
+#define LZ4_MAGIC_NUM	0x184D2204
+#define LZ4_OFFSET	0x00800000
+#endif
 
 __weak bool arch_check_dst_in_secure(void *start, ulong size)
 {
@@ -98,6 +104,27 @@ static struct boot_img_t *read_auth_image(struct spl_image_info *spl_image,
 	flush_dcache_range((ulong)buf, (ulong)(buf + images[image_index].size - 1));
 	if (ahab_verify_cntr_image(&images[image_index], image_index))
 		return NULL;
+#endif
+
+#ifdef CONFIG_IMX_TRUSTY_OS
+	size_t dest_size = TEE_DEST_SIZE;
+
+	if (IS_ENABLED(CONFIG_SPL_LZ4)) {
+                u32 *lz4_magic_num = (void *)images[image_index].entry;
+
+                if (*lz4_magic_num == LZ4_MAGIC_NUM)
+		{
+			memcpy((void *)(images[image_index].entry + LZ4_OFFSET),
+					(void *)images[image_index].entry, images[image_index].size);
+			if (ulz4fn((void *)(images[image_index].entry+ LZ4_OFFSET), images[image_index].size,
+					(void *)images[image_index].entry, &dest_size))
+			{
+				printf("Decompress image fail!\n");
+				return NULL;
+			}
+			images[image_index].size = dest_size;
+		}
+	}
 #endif
 
 	return &images[image_index];
