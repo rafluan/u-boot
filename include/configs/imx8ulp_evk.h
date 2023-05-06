@@ -10,7 +10,7 @@
 #include <asm/arch/imx-regs.h>
 
 #ifdef CONFIG_XPL_BUILD
-#define CFG_MALLOC_F_ADDR		0x22040000
+#define CFG_MALLOC_F_ADDR		0x22048000
 
 #endif
 
