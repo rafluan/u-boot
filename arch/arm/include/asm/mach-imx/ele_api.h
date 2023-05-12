@@ -225,4 +225,5 @@ int ele_crrm_set_boot_mode(enum CRRM_BOOT_MODE *boot_mode, u32 *response);
 int ele_crrm_refresh_awdt(u8 timer_id, u8 pub_key, u32 data_addr, u32 data_size, u32 *response);
 int ele_crrm_get_status(u8 timer_id, u32 status_addr, u32 *status_size, u32 *response);
 int ele_crrm_get_nonce(u8 timer_id, u32 nonce_buf, u32 *buf_size, u32 *response);
+int ele_get_hw_unique_key(uint8_t *hwkey, size_t key_size, uint8_t *ctx, size_t ctx_size);
 #endif
