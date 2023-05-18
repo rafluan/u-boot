@@ -9,3 +9,9 @@ config IMX_SNPS_DDR_PHY_QB_GEN
 	help
 	  Select the DDR PHY training data saving for
 	  QuickBoot support on i.MX9 SOC.
+
+config IMX_SNPS_DDR_PHY_QB
+	bool "i.MX Synopsys DDR PHY QuickBoot mode"
+	depends on IMX_SNPS_DDR_PHY && !IMX_SNPS_DDR_PHY_QB_GEN
+	help
+	  Select the DDR PHY QuickBoot mode on i.MX9 SOC.
