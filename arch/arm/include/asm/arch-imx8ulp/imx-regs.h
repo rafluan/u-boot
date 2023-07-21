@@ -165,6 +165,17 @@ struct usbphy_regs {
 	u32	usb1_pfda_ctrl1_tog;		/* 0x14c */
 };
 
+enum apd_dgo_gpiox_op_range {
+	RANGE_AUTO = 0,
+	RANGE_1P8V,
+	RANGE_3V3V,
+};
+
+enum apd_dgo_gpiox_port {
+	PTE = 0,
+	PTF,
+};
+
 #include <stdbool.h>
 bool is_usb_boot(void);
 void disconnect_from_pc(void);
