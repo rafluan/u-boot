@@ -6,6 +6,7 @@
 #include <init.h>
 #include <power/pmic.h>
 #include <power/pca9450.h>
+#include <power/pf0900.h>
 #include <spl.h>
 #include <asm/global_data.h>
 #include <asm/sections.h>
@@ -47,6 +48,77 @@ void spl_dram_init(void)
 	ddr_init(ptiming);
 }
 
+#if CONFIG_IS_ENABLED(DM_PMIC_PF0900)
+int power_init_board(void)
+{
+	struct udevice *dev;
+	int ret;
+	unsigned int sw_val;
+
+	ret = pmic_get("pmic@8", &dev);
+	if (ret != 0) {
+		puts("ERROR: Get PMIC PF0900 failed!\n");
+		return ret;
+	}
+	puts("PMIC: PF0900\n");
+	if (is_voltage_mode(VOLT_LOW_DRIVE)) {
+		sw_val = 0x39; /* 0.8v for Low drive mode */
+		printf("PMIC: Low Drive Voltage Mode\n");
+	} else if (is_voltage_mode(VOLT_NOMINAL_DRIVE)) {
+		sw_val = 0x41; /* 0.85v for Nominal drive mode */
+		printf("PMIC: Nominal Voltage Mode\n");
+	} else {
+		sw_val = 0x49; /* 0.9v for Over drive mode */
+		printf("PMIC: Over Drive Voltage Mode\n");
+	}
+
+	ret = pmic_reg_read(dev, PF0900_REG_SW1_VRUN);
+	if (ret < 0)
+		return ret;
+
+	ele_volt_change_start_req();
+
+	sw_val = (sw_val & SW_VRUN_MASK) | (ret & ~SW_VRUN_MASK);
+	ret = pmic_reg_write(dev, PF0900_REG_SW1_VRUN, sw_val);
+	if (ret != 0)
+		return ret;
+
+	ele_volt_change_finish_req();
+
+	ret = pmic_reg_read(dev, PF0900_REG_SW1_VSTBY);
+	if (ret < 0)
+		return ret;
+
+	/* set standby voltage to 0.65v */
+	sw_val = 0x21;
+	sw_val = (sw_val & SW_STBY_MASK) | (ret & ~SW_STBY_MASK);
+	ret = pmic_reg_write(dev, PF0900_REG_SW1_VSTBY, sw_val);
+	if (ret != 0)
+		return ret;
+
+	ret = pmic_reg_read(dev, PF0900_REG_GPO_CTRL);
+	if (ret < 0)
+		return ret;
+
+	/* I2C_LT_EN*/
+	sw_val = 0x40;
+	sw_val = (sw_val & GPO3_RUN_MASK) | (ret & ~GPO3_RUN_MASK);
+	ret = pmic_reg_write(dev, PF0900_REG_GPO_CTRL, sw_val);
+	if (ret != 0)
+		return ret;
+
+	ret = pmic_reg_read(dev, PF0900_REG_SYS_CFG1);
+	if (ret < 0)
+		return ret;
+	/*enable stby xrst*/
+	sw_val = ret | XRST_STBY_EN_MASK;
+	ret = pmic_reg_write(dev, PF0900_REG_SYS_CFG1, sw_val);
+	if (ret != 0)
+		return ret;
+	return 0;
+}
+#endif
+
 #if CONFIG_IS_ENABLED(DM_PMIC_PCA9450)
 int power_init_board(void)
 {
@@ -55,13 +127,11 @@ int power_init_board(void)
 	unsigned int val = 0, buck_val;
 
 	ret = pmic_get("pmic@25", &dev);
-	if (ret == -ENODEV) {
-		puts("No pca9450@25\n");
-		return 0;
-	}
-	if (ret != 0)
+	if (ret != 0) {
+		puts("ERROR: Get PMIC PCA9451A failed!\n");
 		return ret;
-
+	}
+	puts("PMIC: PCA9451A\n");
 	/* BUCKxOUT_DVS0/1 control BUCK123 output */
 	pmic_reg_write(dev, PCA9450_BUCK123_DVS, 0x29);
 
