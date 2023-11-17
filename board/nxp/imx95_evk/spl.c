@@ -14,6 +14,8 @@
 #include <asm/mach-imx/boot_mode.h>
 #include <asm/mach-imx/ele_api.h>
 #include <asm/mach-imx/qb.h>
+#include <asm/gpio.h>
+#include <linux/delay.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -28,6 +30,8 @@ int spl_board_boot_device(enum boot_device boot_dev_spl)
 		return BOOT_DEVICE_MMC2;
 	case USB_BOOT:
 		return BOOT_DEVICE_BOARD;
+	case QSPI_BOOT:
+		return BOOT_DEVICE_SPI;
 	default:
 		return BOOT_DEVICE_NONE;
 	}
@@ -45,6 +49,29 @@ void spl_board_init(void)
 
 	if (IS_ENABLED(CONFIG_SPL_IMX_QB))
 		spl_qb_save();
+}
+
+static void flexspi_nor_reset(void)
+{
+	int ret;
+	struct gpio_desc desc;
+
+	ret = dm_gpio_lookup_name("GPIO5_11", &desc);
+	if (ret) {
+		printf("%s lookup GPIO5_11 failed ret = %d\n", __func__, ret);
+		return;
+	}
+
+	ret = dm_gpio_request(&desc, "XSPI_RST_B");
+	if (ret) {
+		printf("%s request XSPI_RST_B failed ret = %d\n", __func__, ret);
+		return;
+	}
+
+	/* assert the XSPI_RST_B */
+	dm_gpio_set_dir_flags(&desc, GPIOD_IS_OUT | GPIOD_IS_OUT_ACTIVE | GPIOD_ACTIVE_LOW);
+	udelay(200); /* 50 ns at least, so use 200ns */
+	dm_gpio_set_value(&desc, 0); /* deassert the XSPI_RST_B */
 }
 
 void board_init_f(ulong dummy)
@@ -77,6 +104,8 @@ void board_init_f(ulong dummy)
 	debug("LC: 0x%x\n", gd->arch.lifecycle);
 
 	get_reset_reason(true, false);
+
+	flexspi_nor_reset();
 
 	board_init_r(NULL, 0);
 }
