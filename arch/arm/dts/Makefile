@@ -948,6 +948,7 @@ dtb-$(CONFIG_ARCH_IMX8M) += \
 
 dtb-$(CONFIG_ARCH_IMX9) += \
 	imx93-11x11-frdm.dtb \
+	imx95-19x19-verdin.dtb \
 	imx93-var-som-symphony.dtb
 
 dtb-$(CONFIG_ARCH_IMXRT) += imxrt1020-evk.dtb \
