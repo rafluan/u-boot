@@ -190,14 +190,12 @@ u32 spl_boot_device(void)
 int g_dnl_bind_fixup(struct usb_device_descriptor *dev, const char *name)
 {
 #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
-#ifdef CONFIG_IMX94
 	struct tag_serialnr serialnr;
 	char serial_string[0x21] = {0};
 
 	get_board_serial(&serialnr);
 	snprintf(serial_string, sizeof(serial_string), "%08x%08x", serialnr.high, serialnr.low);
 	g_dnl_set_serialnumber(serial_string);
-#endif
 #endif
 	put_unaligned(0x0151, &dev->idProduct);
 
