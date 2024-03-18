@@ -21,12 +21,32 @@
 
 #ifdef CONFIG_USB_TCPC
 struct tcpc_port port;
+#ifdef CONFIG_TARGET_IMX95_15X15_EVK
+struct tcpc_port portpd;
+struct tcpc_port_config port_config = {
+	.i2c_bus = 2, /* i2c3 */
+	.addr = 0x50,
+	.port_type = TYPEC_PORT_DRP,
+	.disable_pd = true,
+};
+
+struct tcpc_port_config portpd_config = {
+	.i2c_bus = 2, /*i2c3*/
+	.addr = 0x52,
+	.port_type = TYPEC_PORT_UFP,
+	.max_snk_mv = 20000,
+	.max_snk_ma = 3000,
+	.max_snk_mw = 15000,
+	.op_snk_mv = 9000,
+};
+#else
 struct tcpc_port_config port_config = {
 	.i2c_bus = 6, /* i2c7 */
 	.addr = 0x50,
 	.port_type = TYPEC_PORT_DRP,
 	.disable_pd = true,
 };
+#endif
 
 ulong tca_base;
 
@@ -60,6 +80,34 @@ static void setup_typec(void)
 	int ret;
 
 	tca_base = USB1_BASE_ADDR + 0xfc000;
+
+#ifdef CONFIG_TARGET_IMX95_15X15_EVK
+	struct gpio_desc ext_12v_desc;
+
+	ret = tcpc_init(&portpd, portpd_config, NULL);
+	if (ret) {
+		printf("%s: tcpc portpd init failed, err=%d\n",
+		       __func__, ret);
+	} else if (tcpc_pd_sink_check_charging(&portpd)) {
+		printf("Power supply on USB PD\n");
+
+		/* Enable EXT 12V */
+		ret = dm_gpio_lookup_name("gpio@22_1", &ext_12v_desc);
+		if (ret) {
+			printf("%s lookup gpio@22_1 failed ret = %d\n", __func__, ret);
+			return;
+		}
+
+		ret = dm_gpio_request(&ext_12v_desc, "ext_12v_en");
+		if (ret) {
+			printf("%s request ext_12v_en failed ret = %d\n", __func__, ret);
+			return;
+		}
+
+		/* Enable PER 12V regulator */
+		dm_gpio_set_dir_flags(&ext_12v_desc, GPIOD_IS_OUT | GPIOD_IS_OUT_ACTIVE);
+	}
+#endif
 
 	ret = tcpc_init(&port, port_config, &tca_mux_select);
 	if (ret) {
@@ -139,7 +187,7 @@ static void netc_phy_rst(const char *gpio_name, const char *label)
 
 }
 
-static void netc_regulator_enable(const char *devname, bool enable)
+static void __maybe_unused netc_regulator_enable(const char *devname, bool enable)
 {
 	int ret;
 	struct udevice *dev;
@@ -172,6 +220,10 @@ void netc_init(void)
 		return;
 	}
 
+#ifdef CONFIG_TARGET_IMX95_15X15_EVK
+	netc_phy_rst("gpio@22_4", "ENET1_RST_B");
+	netc_phy_rst("gpio@22_5", "ENET2_RST_B");
+#else
 	netc_phy_rst("i2c5_io@21_2", "ENET1_RST_B");
 
 	/* Enable in SW count */
@@ -191,7 +243,56 @@ void netc_init(void)
 	netc_regulator_enable("regulator-aqr-stby", true);
 	netc_regulator_enable("regulator-mac-stby", true);
 
+#endif
 }
+
+static void flexspi_nor_steup(void)
+{
+	struct gpio_desc desc;
+	int ret;
+
+	if (!IS_ENABLED(CONFIG_TARGET_IMX95_15X15_EVK))
+		return;
+
+	/* Power cycle the M2 3V3 */
+	ret = dm_gpio_lookup_name("gpio@22_10", &desc);
+	if (ret)
+		return;
+
+	ret = dm_gpio_request(&desc, "M2_PWREN");
+	if (ret)
+		return;
+
+	dm_gpio_set_dir_flags(&desc, GPIOD_IS_OUT);
+	dm_gpio_set_value(&desc, 0);
+	udelay(100000);
+	dm_gpio_set_value(&desc, 1);
+
+	/* Enable 1.8V LDO */
+	ret = dm_gpio_lookup_name("gpio@22_11", &desc);
+	if (ret)
+		return;
+
+	ret = dm_gpio_request(&desc, "M2_DIS1");
+	if (ret)
+		return;
+
+	dm_gpio_set_dir_flags(&desc, GPIOD_IS_OUT);
+	dm_gpio_set_value(&desc, 1);
+
+	/* Deassert M2_SD3_nRST */
+	ret = dm_gpio_lookup_name("GPIO5_9", &desc);
+	if (ret)
+		return;
+
+	ret = dm_gpio_request(&desc, "M2_SD3_nRST");
+	if (ret)
+		return;
+
+	dm_gpio_set_dir_flags(&desc, GPIOD_IS_OUT);
+	dm_gpio_set_value(&desc, 1);
+}
+
 int board_init(void)
 {
 	int ret;
@@ -206,6 +307,8 @@ int board_init(void)
 #endif
 
 	netc_init();
+
+	flexspi_nor_steup();
 	return 0;
 }
 
