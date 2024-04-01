@@ -369,4 +369,10 @@ config CMD_PROVISION_KEY
 	  read encrypted key and decrypt it using PKEK.
 	  generate black blob of decrypted key, add 20 bytes TAG to black blob.
 
+config PSCI_BOARD_REBOOT
+	bool "Enable psci board reboot command"
+	depends on ARM_PSCI_FW
+	help
+	  This is a optional command used to trigger system board reboot on imx8q and imx95.
+
 endif
