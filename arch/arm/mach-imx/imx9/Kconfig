@@ -148,7 +148,6 @@ config TARGET_IMX95_15X15_EVK
 	select IMX95
 	imply BOOTSTD_BOOTCOMMAND
 	imply BOOTSTD_FULL
-	imply OF_UPSTREAM
 
 config TARGET_IMX943_EVK
 	bool "imx943_evk"
