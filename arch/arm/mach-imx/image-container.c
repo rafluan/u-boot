@@ -245,6 +245,7 @@ static int scmi_get_boot_device_offset(unsigned long *img_off)
 	return 0;
 }
 
+#ifndef CONFIG_DUAL_BOOTLOADER
 static int scmi_get_boot_stage(u8 *stage)
 {
 	int ret;
@@ -261,6 +262,7 @@ static int scmi_get_boot_stage(u8 *stage)
 
 	return 0;
 }
+#endif
 
 #else
 
@@ -436,6 +438,13 @@ int spl_mmc_emmc_boot_partition(struct mmc *mmc)
 {
 	int part;
 
+#ifdef CONFIG_DUAL_BOOTLOADER
+	/* Bootloader is stored in eMMC user partition for
+	 * dual bootloader.
+	 */
+	part = 0;
+#else
+
 	part = EXT_CSD_EXTRACT_BOOT_PART(mmc->part_config);
 	if (part == EMMC_BOOT_PART_BOOT1 || part == EMMC_BOOT_PART_BOOT2) {
 		bool sec_boot = false;
@@ -454,6 +463,7 @@ int spl_mmc_emmc_boot_partition(struct mmc *mmc)
 	} else if (part == EMMC_BOOT_PART_USER) {
 		part = EMMC_HWPART_DEFAULT;
 	}
+#endif
 
 	return part;
 }
