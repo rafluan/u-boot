@@ -15,10 +15,10 @@
 #include <linux/bitops.h>
 #include <linux/delay.h>
 #include <power/regulator.h>
-#include <asm/mach-imx/sys_proto.h>
 #include <scmi_agent.h>
 #include "../dts/upstream/src/arm64/freescale/imx95-power.h"
 #include <i2c.h>
+#include <asm/arch/sys_proto.h>
 
 #ifdef CONFIG_USB_TCPC
 struct tcpc_port port;
@@ -313,6 +313,9 @@ int board_init(void)
 	netc_init();
 
 	flexspi_nor_steup();
+
+	power_on_m7("mx95evkrpmsg");
+
 	return 0;
 }
 

@@ -25,6 +25,7 @@ enum imx9_soc_voltage_mode soc_target_voltage_mode(void);
 int get_reset_reason(bool sys, bool lm);
 
 int power_on_hsio(void);
+int power_on_m7(char *name);
 
 #define is_voltage_mode(mode) (soc_target_voltage_mode() == (mode))
 
