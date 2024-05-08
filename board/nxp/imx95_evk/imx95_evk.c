@@ -19,6 +19,8 @@
 #include "../dts/upstream/src/arm64/freescale/imx95-power.h"
 #include <i2c.h>
 #include <asm/arch/sys_proto.h>
+#include <dm/uclass.h>
+#include <dm/uclass-internal.h>
 
 #ifdef CONFIG_USB_TCPC
 struct tcpc_port port;
@@ -342,6 +344,7 @@ int ft_board_setup(void *blob, struct bd_info *bd)
 void board_quiesce_devices(void)
 {
 	int ret;
+	struct uclass *uc_dev;
 
 	ret = imx9_scmi_power_domain_enable(IMX95_PD_HSIO_TOP, false);
 	if (ret) {
@@ -354,6 +357,12 @@ void board_quiesce_devices(void)
 		printf("%s: Failed for NETC MIX: %d\n", __func__, ret);
 		return;
 	}
+
+	ret = uclass_get(UCLASS_SPI_FLASH, &uc_dev);
+	if (uc_dev)
+		ret = uclass_destroy(uc_dev);
+	if (ret)
+		printf("couldn't remove SPI FLASH devices\n");
 }
 
 int board_phys_sdram_size(phys_size_t *size)
