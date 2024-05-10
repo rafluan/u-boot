@@ -9,6 +9,7 @@
 #include <asm/arch-imx9/ccm_regs.h>
 #include <asm/arch/sys_proto.h>
 #include <asm/arch-imx9/imx91_pins.h>
+#include <asm/arch/imx-regs.h>
 #include <asm/arch/clock.h>
 #include <i2c.h>
 #include "../common/tcpc.h"
@@ -16,10 +17,18 @@
 #include <asm/gpio.h>
 
 #define UART_PAD_CTRL	(PAD_CTL_DSE(6) | PAD_CTL_FSEL2)
+#define LCDIF_GPIO_PAD_CTRL	(PAD_CTL_DSE(0xf) | PAD_CTL_FSEL2 | PAD_CTL_PUE)
 
 static iomux_v3_cfg_t const uart_pads[] = {
 	MX91_PAD_UART1_RXD__LPUART1_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
 	MX91_PAD_UART1_TXD__LPUART1_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
+};
+
+static iomux_v3_cfg_t const lcdif_gpio_pads[] = {
+	MX91_PAD_GPIO_IO00__GPIO2_IO0| MUX_PAD_CTRL(LCDIF_GPIO_PAD_CTRL),
+	MX91_PAD_GPIO_IO01__GPIO2_IO1 | MUX_PAD_CTRL(LCDIF_GPIO_PAD_CTRL),
+	MX91_PAD_GPIO_IO02__GPIO2_IO2 | MUX_PAD_CTRL(LCDIF_GPIO_PAD_CTRL),
+	MX91_PAD_GPIO_IO03__GPIO2_IO3 | MUX_PAD_CTRL(LCDIF_GPIO_PAD_CTRL),
 };
 
 #if CONFIG_IS_ENABLED(EFI_HAVE_CAPSULE_SUPPORT)
@@ -46,6 +55,15 @@ struct efi_capsule_update_info update_info = {
 int board_early_init_f(void)
 {
 	imx_iomux_v3_setup_multiple_pads(uart_pads, ARRAY_SIZE(uart_pads));
+	imx_iomux_v3_setup_multiple_pads(lcdif_gpio_pads, ARRAY_SIZE(lcdif_gpio_pads));
+
+	/* Workaround LCD panel leakage, output low of CLK/DE/VSYNC/HSYNC as early as possible */
+	struct gpio_regs *gpio2 = (struct gpio_regs *)(GPIO2_BASE_ADDR + 0x40);
+	setbits_le32(&gpio2->gpio_pcor, 0xf);
+	setbits_le32(&gpio2->gpio_pddr, 0xf);
+	/* Set GPIO2_26 to output high to disable panel backlight at default */
+	setbits_le32(&gpio2->gpio_psor, BIT(26));
+	setbits_le32(&gpio2->gpio_pddr, BIT(26));
 
 	init_uart_clk(LPUART1_CLK_ROOT);
 
@@ -237,6 +255,9 @@ int board_ehci_usb_phy_mode(struct udevice *dev)
 	return USB_INIT_DEVICE;
 }
 #endif
+
+struct gpio_desc ext_pwren_desc, exp_sel_desc;
+
 static void board_gpio_init(void)
 {
 	struct gpio_desc desc;
@@ -267,27 +288,27 @@ static void board_gpio_init(void)
 	dm_gpio_set_value(&desc, 1);
 
 	/* Enable EXT_PWREN for vRPi 5V */
-	ret = dm_gpio_lookup_name("gpio@22_8", &desc);
+	ret = dm_gpio_lookup_name("gpio@22_8", &ext_pwren_desc);
 	if (ret)
 		return;
 
-	ret = dm_gpio_request(&desc, "EXT_PWREN");
+	ret = dm_gpio_request(&ext_pwren_desc, "EXT_PWREN");
 	if (ret)
 		return;
 
-	dm_gpio_set_dir_flags(&desc, GPIOD_IS_OUT);
-	dm_gpio_set_value(&desc, 1);
+	dm_gpio_set_dir_flags(&ext_pwren_desc, GPIOD_IS_OUT);
+	dm_gpio_set_value(&ext_pwren_desc, 1);
 
-	ret = dm_gpio_lookup_name("adp5585-gpio4", &desc);
+	ret = dm_gpio_lookup_name("adp5585-gpio4", &exp_sel_desc);
 	if (ret)
 		return;
 
-	ret = dm_gpio_request(&desc, "EXP_SEL");
+	ret = dm_gpio_request(&exp_sel_desc, "EXP_SEL");
 	if (ret)
 		return;
 
-	dm_gpio_set_dir_flags(&desc, GPIOD_IS_OUT);
-	dm_gpio_set_value(&desc, 1);
+	dm_gpio_set_dir_flags(&exp_sel_desc, GPIOD_IS_OUT);
+	dm_gpio_set_value(&exp_sel_desc, 1);
 }
 
 int board_init(void)
@@ -317,4 +338,13 @@ int board_late_init(void)
 	env_set("board_rev", "iMX93");
 #endif
 	return 0;
+}
+
+void board_quiesce_devices(void)
+{
+	/* Turn off 5V for backlight */
+	dm_gpio_set_value(&ext_pwren_desc, 0);
+
+	/* Turn off MUX for rpi */
+	dm_gpio_set_value(&exp_sel_desc, 0);
 }
