@@ -195,6 +195,14 @@ config ELE_SHARED_BUFFER
 	  ELE can't access all DDR memory(0xE0000000 - 0xFFFFFFFF) due to the hardware
 	  limitation, use the shared buffer for exchanging data with ele.
 
+config DEK_BLOB_BUFFER
+	hex "Define the buffer address used for dek blob buffer"
+	default 0x0
+	depends on ARCH_IMX9 && CMD_DEKBLOB
+	help
+	  dek blob will use this buffer for exchanging data with ele. This option
+	  is only available on imx9.
+
 config CMD_PRIBLOB
 	bool "Support the set_priblob_bitfield command"
 	depends on HAS_CAAM && IMX_HAB
