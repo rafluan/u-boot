@@ -51,6 +51,7 @@
 #include <linux/iopoll.h>
 #include <linux/bug.h>
 #include <linux/err.h>
+#include <linux/delay.h>
 
 /* Registers used by the driver */
 #define FSPI_MCR0			0x00
@@ -685,6 +686,12 @@ static void nxp_fspi_dll_calibration(struct nxp_fspi *f)
 				   0, POLL_TOUT, true);
 	if (ret)
 		dev_warn(f->dev, "DLL lock failed, please fix it!\n");
+
+	/*
+	 * For ERR050272, DLL lock status bit is not accurate,
+	 * wait for 4us more as a workaround.
+	 */
+	udelay(4);
 }
 
 /*
