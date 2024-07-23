@@ -84,7 +84,7 @@ static int var_scmi_eeprom_read(uintptr_t addr, u32 size)
 	scmi_eeprom_xfer_out_t xfer_out;
 
 	struct scmi_msg msg = SCMI_MSG_IN(SCMI_PROTOCOL_ID_MISC,
-					  0xC, /* SCMI_MISC_EEPROM_XFER */
+					  0xE, /* COMMAND_MISC_EEPROM_XFER defined by Variscite in the imx-sm sources */
 					  xfer_in, xfer_out);
 
 	VAR_FLUSH_CACHES();
