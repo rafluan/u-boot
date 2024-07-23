@@ -88,7 +88,7 @@ static int var_scmi_eeprom_read(uintptr_t addr, u32 size)
 					  xfer_in, xfer_out);
 
 	VAR_FLUSH_CACHES();
-	ret = devm_scmi_process_msg(gd->arch.scmi_dev, gd->arch.scmi_channel, &msg);
+	ret = devm_scmi_process_msg(gd->arch.scmi_dev, &msg);
 	VAR_FLUSH_CACHES();
 
 	if (ret)
