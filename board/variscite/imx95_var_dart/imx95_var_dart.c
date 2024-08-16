@@ -163,7 +163,7 @@ int board_usb_init(int index, enum usb_init_type init)
 #ifdef CONFIG_USB_DWC3
 		dwc3_nxp_usb_phy_init(&dwc3_device_data);
 #endif
-#ifdef CONFIG_USB_TCPC__FF
+#ifdef CONFIG_USB_TCPC
 		ret = tcpc_setup_ufp_mode(&port);
 		if (ret)
 			return ret;
@@ -172,7 +172,7 @@ int board_usb_init(int index, enum usb_init_type init)
 		return dwc3_uboot_init(&dwc3_device_data);
 #endif
 	} else if (index == 0 && init == USB_INIT_HOST) {
-#ifdef CONFIG_USB_TCPC__FF
+#ifdef CONFIG_USB_TCPC
 		ret = tcpc_setup_dfp_mode(&port);
 #endif
 		return ret;
@@ -189,7 +189,7 @@ int board_usb_cleanup(int index, enum usb_init_type init)
 		dwc3_uboot_exit(index);
 #endif
 	} else if (index == 0 && init == USB_INIT_HOST) {
-#ifdef CONFIG_USB_TCPC__FF
+#ifdef CONFIG_USB_TCPC
 		ret = tcpc_disable_src_vbus(&port);
 #endif
 	}
@@ -361,129 +361,6 @@ void board_quiesce_devices(void)
 	}
 }
 
-#if IS_ENABLED(CONFIG_OF_BOARD_FIXUP)
-
-#if IS_ENABLED(CONFIG_TARGET_IMX95_15X15_EVK)
-static void change_fdt_mido_pins(void *fdt)
-{
-	int nodeoff, ret;
-	u32 enet1_pins[12] = { 0x00B8, 0x02BC, 0x0424, 0x00, 0x00, 0x57e,
-		0x00BC, 0x02C0, 0x0428, 0x00, 0x00, 0x97e};
-
-	nodeoff = fdt_path_offset(fdt, "/firmware/scmi/protocol@19/emdiogrp");
-	if (nodeoff > 0) {
-
-		int i;
-		for (i = 0; i < 12; i++) {
-			enet1_pins[i] = cpu_to_fdt32(enet1_pins[i]);
-		}
-
-		ret = fdt_setprop(fdt, nodeoff, "fsl,pins", enet1_pins, 12 * sizeof(u32));
-		if (ret)
-			printf("fdt_setprop fsl,pins error %d\n", ret);
-		else
-			debug("Update MDIO pins ok\n");
-	}
-}
-
-static int board_fix_15x15_evk(void *fdt)
-{
-	int ret;
-	struct udevice *bus;
-	struct udevice *i2c_dev = NULL;
-
-	ret = uclass_get_device_by_seq(UCLASS_I2C, 2, &bus);
-	if (ret) {
-		printf("%s: Can't find I2C bus 2\n", __func__);
-		return 0;
-	}
-
-	ret = dm_i2c_probe(bus, 0x50, 0, &i2c_dev);
-	if (ret) {
-		ret = dm_i2c_probe(bus, 0x20, 0, &i2c_dev);
-		if (!ret) {
-			debug("Find Audio board\n");
-			change_fdt_mido_pins(fdt);
-		}
-	}
-
-	return 0;
-}
-
-#else
-
-static int imx9_scmi_misc_cfginfo(u32 *msel, char *cfgname)
-{
-	struct scmi_cfg_info_out out;
-	struct scmi_msg msg = SCMI_MSG(SCMI_PROTOCOL_ID_MISC, SCMI_MISC_CFG_INFO, out);
-	int ret;
-
-	ret = devm_scmi_process_msg(gd->arch.scmi_dev, &msg);
-	if(ret == 0 && out.status == 0) {
-		strcpy(cfgname, (const char *)out.cfgname);
-	} else {
-		printf("Failed to get cfg name, scmi_err = %d\n",
-		       out.status);
-		return -EINVAL;
-	}
-
-	return 0;
-}
-
-static void disable_fdt_resources(void *fdt)
-{
-	int i = 0;
-	int nodeoff, ret;
-	const char *status = "disabled";
-	static const char * const dsi_nodes[] = {
-		"/soc@0/bus@42000000/i2c@426b0000",
-		"/soc@0/bus@42000000/i2c@426d0000",
-		"/pcie@4ca00000",
-		"/pcie@4cb00000"
-	};
-
-	for (i = 0; i < ARRAY_SIZE(dsi_nodes); i++) {
-		nodeoff = fdt_path_offset(fdt, dsi_nodes[i]);
-		if (nodeoff > 0) {
-set_status:
-			ret = fdt_setprop(fdt, nodeoff, "status", status,
-					  strlen(status) + 1);
-			if (ret == -FDT_ERR_NOSPACE) {
-				ret = fdt_increase_size(fdt, 512);
-				if (!ret)
-					goto set_status;
-			}
-		}
-	}
-}
-
-static int board_fix_19x19_evk(void *fdt)
-{
-	char cfgname[SCMI_MISC_MAX_CFGNAME];
-	u32 msel;
-	int ret;
-	const char *netcfg = "mx95netc";
-
-	ret = imx9_scmi_misc_cfginfo(&msel, cfgname);
-	if (!ret) {
-		debug("SM: %s\n", cfgname);
-		if (!strcmp(netcfg, cfgname))
-			disable_fdt_resources(fdt);
-	}
-
-	return 0;
-}
-#endif
-
-int board_fix_fdt(void *fdt)
-{
-#if IS_ENABLED(CONFIG_TARGET_IMX95_15X15_EVK)
-	return board_fix_15x15_evk(fdt);
-#else
-	return board_fix_19x19_evk(fdt);
-#endif
-}
-#endif
 #ifdef CONFIG_FSL_FASTBOOT
 #ifdef CONFIG_ANDROID_RECOVERY
 int is_recovery_key_pressing(void)
