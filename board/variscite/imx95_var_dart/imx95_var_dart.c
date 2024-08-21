@@ -37,6 +37,8 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+static struct var_eeprom eeprom = {0};
+
 int board_early_init_f(void)
 {
 	/* UART1: A55, UART2: M33, UART3: M7 */
@@ -300,7 +302,7 @@ int board_init(void)
 
 int board_late_init(void)
 {
-	struct var_eeprom *ep = VAR_EEPROM_DATA;
+	struct var_eeprom *ep = &eeprom;
 	char som_rev[CARRIER_REV_LEN] = {0};
 
 #ifdef CONFIG_ENV_IS_IN_MMC
@@ -311,6 +313,8 @@ int board_late_init(void)
 #ifdef CONFIG_AHAB_BOOT
 	env_set("sec_boot", "yes");
 #endif
+	/* Read EEPROM data */
+	var_eeprom_read_header(ep);
 
 	/* SoM Features ENV */
 	if (ep->features & VAR_EEPROM_F_WBE)
