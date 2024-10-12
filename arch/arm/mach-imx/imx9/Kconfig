@@ -18,12 +18,14 @@ config IMX93
 	select IMX9
 	select ARCH_MISC_INIT
 	select ARMV8_SPL_EXCEPTION_VECTORS
+	select SYS_FSL_ERRATUM_052357
 
 config IMX91
 	bool
 	select IMX9
 	select ARCH_MISC_INIT
 	select ARMV8_SPL_EXCEPTION_VECTORS
+	select SYS_FSL_ERRATUM_052357
 
 config IMX95_A0
 	bool "Support for i.MX95 A0 silicon version"
