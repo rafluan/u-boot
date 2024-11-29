@@ -11,6 +11,8 @@
 #include <dm/device_compat.h>
 #include <dt-bindings/clock/nxp,imx95-clock.h>
 #include <imx95-clock.h>
+#include <dt-bindings/clock/nxp,imx94-clock.h>
+#include <imx94-clock.h>
 #include <linux/clk-provider.h>
 
 #include "clk.h"
@@ -124,6 +126,47 @@ static const struct imx95_blk_ctl_dev_data imx95_lvds_csr_dev_data = {
 	.clk_reg_offset = 0,
 };
 
+static const struct imx95_blk_ctl_clk_dev_data imx94_lvds_clk_dev_data[] = {
+	[IMX94_CLK_DISPMIX_LVDS_CLK_GATE] = {
+		.name = "lvds_clk_gate",
+		.parent_names = (const char *[]){ "ldb_pll_div7", },
+		.clk_parent_ids = { ~0U, },
+		.num_parents = 1,
+		.reg = 0,
+		.bit_idx = 1,
+		.type = CLK_GATE,
+		.flags = CLK_SET_RATE_PARENT,
+		.flags2 = CLK_GATE_SET_TO_DISABLE,
+	},
+};
+
+static const struct imx95_blk_ctl_dev_data imx94_lvds_csr_dev_data = {
+	.num_clks = ARRAY_SIZE(imx94_lvds_clk_dev_data),
+	.clk_dev_data = imx94_lvds_clk_dev_data,
+};
+
+static const char * const imx94_disp_engine_parents[] = {
+	"disppix", "ldb_pll_div7"
+};
+
+static const struct imx95_blk_ctl_clk_dev_data imx94_dispmix_csr_clk_dev_data[] = {
+	[IMX94_CLK_DISPMIX_CLK_SEL] = {
+		.name = "disp_clk_sel",
+		.parent_names = imx94_disp_engine_parents,
+		.clk_parent_ids = { IMX94_CLK_DISPPIX, ~0U, },
+		.num_parents = ARRAY_SIZE(imx94_disp_engine_parents),
+		.reg = 0,
+		.bit_idx = 1,
+		.type = CLK_MUX,
+		.flags = CLK_SET_RATE_NO_REPARENT | CLK_SET_RATE_PARENT,
+	},
+};
+
+static const struct imx95_blk_ctl_dev_data imx94_dispmix_csr_dev_data = {
+	.num_clks = ARRAY_SIZE(imx94_dispmix_csr_clk_dev_data),
+	.clk_dev_data = imx94_dispmix_csr_clk_dev_data,
+};
+
 static int imx95_blkctrl_clk_probe(struct udevice *dev)
 {
 	int i, j, ret;
@@ -214,6 +257,8 @@ static int imx95_blkctrl_clk_probe(struct udevice *dev)
 }
 
 static const struct udevice_id imx95_blkctrl_clk_ids[] = {
+	{ .compatible = "nxp,imx94-display-csr", .data = (ulong)&imx94_dispmix_csr_dev_data },
+	{ .compatible = "nxp,imx94-lvds-csr", .data = (ulong)&imx94_lvds_csr_dev_data },
 	{ .compatible = "nxp,imx95-lvds-csr", .data = (ulong)&imx95_lvds_csr_dev_data, },
 	{ .compatible = "nxp,imx95-hsio-blk-ctl", .data = (ulong)&hsio_blk_ctl_dev_data,  },
 	{ },
@@ -225,5 +270,8 @@ U_BOOT_DRIVER(imx95_blkctrl_clk) = {
 	.of_match = imx95_blkctrl_clk_ids,
 	.ops = &ccf_clk_ops,
 	.probe = imx95_blkctrl_clk_probe,
+#if CONFIG_IS_ENABLED(OF_REAL)
+	.bind = dm_scan_fdt_dev,
+#endif
 	.flags = DM_FLAG_PRE_RELOC,
 };
