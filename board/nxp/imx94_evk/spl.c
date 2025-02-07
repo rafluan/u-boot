@@ -10,6 +10,7 @@
 #include <asm/global_data.h>
 #include <asm/sections.h>
 #include <asm/arch/clock.h>
+#include "../dts/upstream/src/arm64/freescale/imx94-clock.h"
 #include <asm/arch/mu.h>
 #include <asm/arch/sys_proto.h>
 #include <asm/mach-imx/boot_mode.h>
@@ -34,6 +35,25 @@ int spl_board_boot_device(enum boot_device boot_dev_spl)
 	default:
 		return BOOT_DEVICE_NONE;
 	}
+}
+
+static void xspi_nor_reset(void)
+{
+	int ret;
+	u32 resp = 0;
+
+	ret = ele_set_gmid(&resp);
+	if (ret)
+		printf("Fail to set GMID: %d, resp 0x%x\n", ret, resp);
+
+	/* Set MTO to max */
+	imx_clk_scmi_enable(IMX94_CLK_XSPI1, true);
+	imx_clk_scmi_enable(IMX94_CLK_XSPI2, true);
+
+	writel(0xffffffff, 0x42b90928);
+	writel(0xffffffff, 0x42be0928);
+
+	return;
 }
 
 void spl_board_init(void)
@@ -87,6 +107,8 @@ void board_init_f(ulong dummy)
 	debug("LC: 0x%x\n", gd->arch.lifecycle);
 
 	get_reset_reason(true, false);
+
+	xspi_nor_reset();
 
 	board_init_r(NULL, 0);
 }
