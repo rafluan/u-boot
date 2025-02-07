@@ -95,25 +95,6 @@
 		clock-output-names = "ldb_pll_div7";
 	};
 
-	reg_gpy_stby: regulator-gpy-stby {
-		compatible = "regulator-fixed";
-		regulator-name = "gpy-stby";
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-		gpio = <&pcal6416_i2c3_u171 5 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
-	};
-
-	reg_gpy_en: regulator-gpy-en {
-		compatible = "regulator-fixed";
-		regulator-name = "gpy-en";
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-		vin-supply = <&reg_gpy_stby>;
-		gpio = <&pcal6416_i2c3_u171 6 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
-	};
-
 	usbphynop: usbphynop {
 		compatible = "usb-nop-xceiv";
 		clocks = <&scmi_clk IMX94_CLK_HSIO>;
