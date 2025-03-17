@@ -29,6 +29,7 @@ int spl_board_boot_device(enum boot_device boot_dev_spl)
 	case MMC2_BOOT:
 		return BOOT_DEVICE_MMC2;
 	case USB_BOOT:
+	case USB2_BOOT:
 		return BOOT_DEVICE_BOARD;
 	case QSPI_BOOT:
 		return BOOT_DEVICE_SPI;
@@ -40,12 +41,20 @@ int spl_board_boot_device(enum boot_device boot_dev_spl)
 void spl_board_init(void)
 {
 	int ret;
+	u32 bd;
 
 	puts("Normal Boot\n");
 
 	ret = ele_start_rng();
 	if (ret)
 		printf("Fail to start RNG: %d\n", ret);
+
+	bd = spl_boot_device();
+	if (bd == BOOT_DEVICE_BOARD) { /* USB */
+		ret = power_on_hsio();
+		if (ret)
+			printf("power on hsio is failed\n");
+	}
 
 	if (IS_ENABLED(CONFIG_SPL_IMX_QB))
 		spl_qb_save();
