@@ -10,6 +10,7 @@
 #include <asm/arch/sys_proto.h>
 #include <asm/armv8/mmu.h>
 #include <asm/mach-imx/boot_mode.h>
+#include <asm/mach-imx/optee.h>
 #include <asm/mach-imx/ele_api.h>
 #include <asm/setup.h>
 #include <dm/uclass.h>
@@ -58,6 +59,24 @@ uint32_t scmi_get_rom_data(rom_passover_t *rom_data)
 	return 0;
 }
 
+bool is_usb_boot(void)
+{
+	enum boot_device bt_dev = get_boot_device();
+	return (bt_dev == USB_BOOT || bt_dev == USB2_BOOT);
+}
+
+void disconnect_from_pc(void)
+{
+	enum boot_device bt_dev = get_boot_device();
+
+	if (bt_dev == USB_BOOT)
+		clrbits_le32(USB1_BASE_ADDR + 0xc704, (1 << 31));
+	else if (bt_dev == USB2_BOOT)
+		writel(0x0, USB2_BASE_ADDR + 0x140);
+
+	return;
+}
+
 #if IS_ENABLED(CONFIG_ENV_IS_IN_MMC)
 __weak int board_mmc_get_env_dev(int devno)
 {
@@ -101,6 +120,21 @@ int mmc_get_env_dev(void)
 		return env_get_ulong("mmcdev", 10, CONFIG_ENV_MMC_DEVICE_INDEX);
 
 	return board_mmc_get_env_dev(boot_instance);
+}
+#endif
+
+#ifdef CONFIG_USB_PORT_AUTO
+int board_usb_gadget_port_auto(void)
+{
+    enum boot_device bt_dev = get_boot_device();
+	int usb_boot_index = 0;
+
+	if (bt_dev == USB2_BOOT)
+		usb_boot_index = 1;
+
+	printf("auto usb %d\n", usb_boot_index);
+
+	return usb_boot_index;
 }
 #endif
 
@@ -711,7 +745,7 @@ int arch_misc_init(void)
 	return 0;
 }
 
-#if defined(CONFIG_OF_BOARD_FIXUP) && !defined(CONFIG_SPL_BUILD)
+#if defined(CONFIG_OF_BOARD_FIXUP) && !defined(CONFIG_XPL_BUILD)
 int board_fix_fdt(void *fdt)
 {
 	return 0;
@@ -720,7 +754,7 @@ int board_fix_fdt(void *fdt)
 
 int ft_system_setup(void *blob, struct bd_info *bd)
 {
-	return 0;
+	return ft_add_optee_node(blob, bd);
 }
 
 #if IS_ENABLED(CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG)
@@ -745,7 +779,7 @@ static void gpio_reset(ulong gpio_base)
 
 int arch_cpu_init(void)
 {
-	if (IS_ENABLED(CONFIG_SPL_BUILD)) {
+	if (IS_ENABLED(CONFIG_XPL_BUILD)) {
 		disable_wdog((void __iomem *)WDG3_BASE_ADDR);
 		disable_wdog((void __iomem *)WDG4_BASE_ADDR);
 
@@ -785,7 +819,7 @@ int imx9_probe_mu(void)
 	if (ret)
 		return ret;
 
-#if defined(CONFIG_SPL_BUILD)
+#if defined(CONFIG_XPL_BUILD)
 	ret = uclass_get_device_by_name(UCLASS_MISC, "mailbox@47530000", &dev);
 #else
 	ret = uclass_get_device_by_name(UCLASS_MISC, "mailbox@47550000", &dev);
@@ -813,7 +847,7 @@ int timer_init(void)
 	gd->arch.tbl = 0;
 	gd->arch.tbu = 0;
 
-	if (IS_ENABLED(CONFIG_SPL_BUILD)) {
+	if (IS_ENABLED(CONFIG_XPL_BUILD)) {
 		unsigned long freq = 24000000;
 
 		asm volatile("msr cntfrq_el0, %0" : : "r" (freq) : "memory");
@@ -893,7 +927,7 @@ enum boot_device get_boot_device(void)
 	enum boot_device boot_dev = 0;
 	rom_passover_t *rdata;
 
-#if IS_ENABLED(CONFIG_SPL_BUILD)
+#if IS_ENABLED(CONFIG_XPL_BUILD)
 	rdata = &rom_passover_data;
 #else
 	rom_passover_t rom_data = {0};

@@ -19,6 +19,16 @@ u32 get_arm_core_clk(void)
 	return imx_clk_scmi_get_rate(SCMI_CLK(A55));
 }
 
+void enable_usboh3_clk(unsigned char enable)
+{
+
+}
+
+u32 get_lpuart_clk(void)
+{
+	return imx_clk_scmi_get_rate(SCMI_CLK(LPUART1));
+}
+
 void init_uart_clk(u32 index)
 {
 	u32 clock_id;
