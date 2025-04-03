@@ -41,7 +41,8 @@ static inline int xpcs_phy_startup(struct udevice *dev)
 }
 #endif
 
-#define ENETC_DRIVER_NAME	"enetc_eth"
+#define ENETC_IMX_DRIVER_NAME	"enetc_imx_eth"
+#define ENETC_LS_DRIVER_NAME	"enetc_ls_eth"
 
 /*
  * Calculate number of buffer descriptors per cacheline, and compile-time
@@ -66,8 +67,12 @@ static int enetc_is_imx95(struct udevice *dev)
 	struct pci_child_plat *pplat = dev_get_parent_plat(dev);
 
 	/* Test whether this is i.MX95 ENETCv4. This may be optimized out. */
-	return IS_ENABLED(CONFIG_ARCH_IMX9) &&
-	       pplat->vendor == PCI_VENDOR_ID_PHILIPS;
+	if (pplat->vendor)
+		return IS_ENABLED(CONFIG_ARCH_IMX9) &&
+		       pplat->vendor == PCI_VENDOR_ID_PHILIPS;
+	else
+		return IS_ENABLED(CONFIG_ARCH_IMX9) &&
+		       !strcmp(dev->driver->name, ENETC_IMX_DRIVER_NAME);
 }
 
 static int enetc_is_ls1028a(struct udevice *dev)
@@ -75,8 +80,12 @@ static int enetc_is_ls1028a(struct udevice *dev)
 	struct pci_child_plat *pplat = dev_get_parent_plat(dev);
 
 	/* Test whether this is LS1028A ENETC. This may be optimized out. */
-	return IS_ENABLED(CONFIG_ARCH_LS1028A) &&
-	       pplat->vendor == PCI_VENDOR_ID_FREESCALE;
+	if (pplat->vendor)
+		return IS_ENABLED(CONFIG_ARCH_LS1028A) &&
+		       pplat->vendor == PCI_VENDOR_ID_FREESCALE;
+	else
+		return IS_ENABLED(CONFIG_ARCH_LS1028A) &&
+		       !strcmp(dev->driver->name, ENETC_LS_DRIVER_NAME);
 }
 
 static int enetc_dev_id(struct udevice *dev)
@@ -301,7 +310,8 @@ void fdt_fixup_enetc_mac(void *blob)
 
 	uclass_foreach_dev(dev, uc) {
 		if (!dev->driver || !dev->driver->name ||
-		    strcmp(dev->driver->name, ENETC_DRIVER_NAME))
+		    (strcmp(dev->driver->name, ENETC_IMX_DRIVER_NAME) &&
+		    strcmp(dev->driver->name, ENETC_LS_DRIVER_NAME)))
 			continue;
 
 		enetc_set_ierb_primary_mac(dev, blob);
@@ -1074,7 +1084,7 @@ static int enetc_probe_imx(struct udevice *dev)
 }
 
 U_BOOT_DRIVER(eth_enetc_imx) = {
-	.name		= ENETC_DRIVER_NAME,
+	.name		= ENETC_IMX_DRIVER_NAME,
 	.id		= UCLASS_ETH,
 	.bind		= enetc_bind,
 	.probe		= enetc_probe_imx,
@@ -1113,7 +1123,7 @@ static const struct eth_ops enetc_ops_ls = {
 };
 
 U_BOOT_DRIVER(eth_enetc_ls) = {
-	.name	= ENETC_DRIVER_NAME,
+	.name	= ENETC_LS_DRIVER_NAME,
 	.id	= UCLASS_ETH,
 	.bind	= enetc_bind,
 	.probe	= enetc_probe,
