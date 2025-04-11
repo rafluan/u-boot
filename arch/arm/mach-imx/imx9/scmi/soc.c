@@ -16,11 +16,13 @@
 #include <dm/uclass.h>
 #include <dm/device.h>
 #include <env_internal.h>
+#include <linux/iopoll.h>
 #include <fuse.h>
 #include <imx_thermal.h>
 #include <linux/bitfield.h>
 #include <linux/iopoll.h>
 #include <linux/bitops.h>
+#include <fdt_support.h>
 #include <scmi_agent.h>
 #include <scmi_nxp_protocols.h>
 #include "common.h"
@@ -1228,8 +1230,10 @@ int disable_lvds_node(void *blob)
 int ft_system_setup(void *blob, struct bd_info *bd)
 {
 	u32 val = 0;
+	int ret = 0, nodeoff;
 	int num_a55_cores_disabled = 0;
 	int gpu_disabled = 0;
+	const char *status = "disabled";
 
 	if (is_imx95()) {
 		fuse_read(2, 2, &val);
@@ -1267,6 +1271,25 @@ int ft_system_setup(void *blob, struct bd_info *bd)
 			disable_pciea_node(blob);
 		if (val & BIT(7)) /* PCIE B */
 			disable_pcieb_node(blob);
+
+		if ((gd->arch.soc_rev >> 28) == 0xa) {
+			puts("disabling SMMU\n");
+
+			ret = fdt_increase_size(blob, 256);
+			if (ret) {
+				printf("Unable to increase fdt size, err=%s\n", fdt_strerror(ret));
+				return ret;
+			}
+			nodeoff = fdt_path_offset(blob, "/soc/bus@49000000/iommu@490d0000");
+			if (nodeoff > 0) {
+				ret = fdt_setprop(blob, nodeoff, "status", status,
+						  strlen(status) + 1);
+				if (ret) {
+					printf("Unable to disable SMMU, err=%s\n", fdt_strerror(ret));
+					return ret;
+				}
+			}
+		}
 
 		if (val & BIT(17)) { /* GPU MIX */
 			disable_gpu_node(blob, num_a55_cores_disabled);
@@ -1404,6 +1427,53 @@ int imx9_probe_mu(void)
 
 EVENT_SPY_SIMPLE(EVT_DM_POST_INIT_F, imx9_probe_mu);
 EVENT_SPY_SIMPLE(EVT_DM_POST_INIT_R, imx9_probe_mu);
+
+#ifdef CONFIG_XPL_BUILD
+int disable_smmuv3(void)
+{
+	/*
+	 * Disable SMMU in case kernel force reset, not check whether SMMU
+	 * is already disabled, because there is chance that when SMMU
+	 * is being dsiable in linux, while linux got reset. So disable SMMU
+	 * no matter SMMU is disabled or enabled.
+	 */
+	if (IS_ENABLED(CONFIG_IMX95)) {
+		int ret;
+		u32 reg, val, __iomem *gbpa = (void __iomem *)SMMU_BASE_ADDR + SMMU_GBPA;
+
+		ret = readl_relaxed_poll_timeout(gbpa, reg, !(reg & GBPA_UPDATE),
+						 ARM_SMMU_POLL_TIMEOUT_US);
+
+		if (ret) {
+			printf("GBPA updating waiting timeout\n");
+			return ret;
+		}
+
+		/* Use incoming SHCFG attributes */
+		reg = BIT(12);
+
+		writel_relaxed(reg | GBPA_UPDATE, gbpa);
+		ret = readl_relaxed_poll_timeout(gbpa, reg, !(reg & GBPA_UPDATE),
+						 ARM_SMMU_POLL_TIMEOUT_US);
+
+		if (ret) {
+			printf("GBPA not responding to update\n");
+			return ret;
+		}
+
+		val = 0;
+		writel_relaxed(val, SMMU_BASE_ADDR + SMMU_CR0);
+		ret = readl_relaxed_poll_timeout(SMMU_BASE_ADDR + SMMU_CR0_ACK, reg, reg == val,
+						 ARM_SMMU_POLL_TIMEOUT_US);
+		if (ret) {
+			printf("CR0 not updated\n");
+			return ret;
+		}
+	}
+
+	return 0;
+}
+#endif
 
 int timer_init(void)
 {

@@ -118,6 +118,8 @@ void board_init_f(ulong dummy)
 
 	get_reset_reason(true, false);
 
+	disable_smmuv3();
+
 	flexspi_nor_reset();
 
 	board_init_r(NULL, 0);
