@@ -150,6 +150,7 @@ static int get_dev_container_size(void *dev, int dev_type, unsigned long offset,
 				  CONTAINER_HDR_ALIGNMENT / mmc->read_bl_len,
 				  buf);
 		if (count == 0) {
+			free(buf);
 			printf("Read container image from MMC/SD failed\n");
 			return -EIO;
 		}
@@ -163,6 +164,7 @@ static int get_dev_container_size(void *dev, int dev_type, unsigned long offset,
 		ret = spi_flash_read(flash, offset,
 				     CONTAINER_HDR_ALIGNMENT, buf);
 		if (ret != 0) {
+			free(buf);
 			printf("Read container image from QSPI failed\n");
 			return -EIO;
 		}
@@ -174,6 +176,7 @@ static int get_dev_container_size(void *dev, int dev_type, unsigned long offset,
 		ret = nand_spl_load_image(offset, CONTAINER_HDR_ALIGNMENT,
 					  buf);
 		if (ret != 0) {
+			free(buf);
 			printf("Read container image from NAND failed\n");
 			return -EIO;
 		}
@@ -189,6 +192,7 @@ static int get_dev_container_size(void *dev, int dev_type, unsigned long offset,
 	if (dev_type == ROM_API_DEV) {
 		ret = spl_romapi_read(offset, CONTAINER_HDR_ALIGNMENT, buf);
 		if (!ret) {
+			free(buf);
 			printf("Read container image from ROM API failed\n");
 			return -EIO;
 		}
