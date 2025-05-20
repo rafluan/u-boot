@@ -87,10 +87,64 @@ bool qb_check(void)
 	return true;
 }
 
+#if IS_ENABLED(CONFIG_SCMI_FIRMWARE)
+static int scmi_get_boot_device_offset(unsigned long *img_off)
+{
+	int ret;
+	rom_passover_t rom_data = {0};
+	rom_passover_t *rdata = &rom_data;
+
+	ret = scmi_get_rom_data(rdata);
+	if (ret != 0) {
+		printf("SCMI: fail to get ROM passover data %d\n", ret);
+		return ret;
+	}
+
+	*img_off = rom_data.img_ofs;
+
+	return 0;
+}
+
+#ifdef QB_MMC_EN
+static int scmi_get_boot_stage(u8 *stage)
+{
+	int ret;
+	rom_passover_t rom_data = {0};
+	rom_passover_t *rdata = &rom_data;
+
+	ret = scmi_get_rom_data(rdata);
+	if (ret != 0) {
+		printf("SCMI: fail to get ROM passover data %d\n", ret);
+		return ret;
+	}
+
+	*stage = rom_data.boot_stage;
+
+	return 0;
+}
+#endif /** QB_MMC_EN */
+#endif /** CONFIG_SCMI_FIRMWARE */
+
 static unsigned long get_boot_device_offset(void *dev, int dev_type, bool bootdev)
 {
 	unsigned long offset = 0;
 	struct mmc *mmc;
+
+#if IS_ENABLED(CONFIG_SCMI_FIRMWARE)
+	int ret;
+
+	/** Running qb save from SDP boot or qb save to non boot device.
+	  * The current boot device is different that the medium we
+	  * are trying to save the qb data to. ROM does not know what our
+	  * final boot device will be.
+	  */
+	if (bootdev) {
+		ret = scmi_get_boot_device_offset(&offset);
+		if (!ret)
+			return offset;
+	}
+	/* fall back to boot from primary set if get rom passover failed */
+#endif /** CONFIG_SCMI_FIRMWARE */
 
 	switch (dev_type) {
 	case ROM_API_DEV:
@@ -294,7 +348,18 @@ static int do_qb_mmc(int dev, bool save, bool is_bootdev)
 		orig_part = mmc_get_blk_desc(mmc)->hwpart;
 		part = EXT_CSD_EXTRACT_BOOT_PART(mmc->part_config);
 
-		/* Select the partition */
+		if (is_bootdev && (part == 1 || part == 2)) {
+#if IS_ENABLED(CONFIG_SCMI_FIRMWARE)
+			u8 stage;
+			ret = scmi_get_boot_stage(&stage);
+			if (!ret) {
+				if (stage == 0x9)
+					part = (part == 1) ? 2 : 1;
+			}
+#endif /** CONFIG_SCMI_FIRMWARE */
+		}
+
+		/** Select the partition */
 		ret = mmc_switch_part(mmc, part);
 		if (ret)
 			return ret;
