@@ -311,6 +311,9 @@ struct spl_image_info {
 	uint *stack_prot;
 	ulong reloc_offset;
 #endif
+#if IS_ENABLED(CONFIG_IMX_CRRM)
+	bool recovery;
+#endif
 };
 
 /* function to jump to an image from SPL */

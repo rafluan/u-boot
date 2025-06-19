@@ -13,6 +13,9 @@
 #ifdef CONFIG_AHAB_BOOT
 #include <asm/mach-imx/ahab.h>
 #endif
+#if IS_ENABLED(CONFIG_IMX_CRRM)
+#define IMG_TYPE_RECOVERY		0x09
+#endif
 
 __weak bool arch_check_dst_in_secure(void *start, ulong size)
 {
@@ -22,6 +25,11 @@ __weak bool arch_check_dst_in_secure(void *start, ulong size)
 __weak void *arch_get_container_trampoline(void)
 {
 	return NULL;
+}
+
+void __weak arch_spl_load_configure(struct spl_image_info *spl_image)
+{
+	return;
 }
 
 static struct boot_img_t *read_auth_image(struct spl_image_info *spl_image,
@@ -47,6 +55,15 @@ static struct boot_img_t *read_auth_image(struct spl_image_info *spl_image,
 		       __func__, image_index, spl_get_bl_len(info));
 		return NULL;
 	}
+
+#if IS_ENABLED(CONFIG_IMX_CRRM)
+	if ((images[image_index].hab_flags & 0xF) == IMG_TYPE_RECOVERY) {
+		if (!spl_image->recovery) {
+			debug("Skip recovery image %d\n", image_index);
+			return &images[image_index];
+		}
+	}
+#endif
 
 	size = ALIGN(images[image_index].size, spl_get_bl_len(info));
 	offset = images[image_index].offset + container_offset;
@@ -181,5 +198,6 @@ end:
 int spl_load_imx_container(struct spl_image_info *spl_image,
 			   struct spl_load_info *info, ulong offset)
 {
+	arch_spl_load_configure(spl_image);
 	return read_auth_container(spl_image, info, offset);
 }
