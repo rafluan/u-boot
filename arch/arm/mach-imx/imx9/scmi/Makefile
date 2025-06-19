@@ -7,3 +7,4 @@ ccflags-y += -I$(srctree)/dts/upstream/src/arm64/freescale/
 
 obj-y += soc.o
 obj-y += clock_scmi.o clock.o
+obj-$(CONFIG_IMX_CRRM) += crrm.o
