@@ -16,6 +16,7 @@
 #include <asm/mach-imx/boot_mode.h>
 #include <asm/mach-imx/ele_api.h>
 #include <asm/mach-imx/qb.h>
+#include <asm/arch/crrm.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -37,6 +38,7 @@ int spl_board_boot_device(enum boot_device boot_dev_spl)
 	}
 }
 
+#if !IS_ENABLED(CONFIG_IMX_CRRM)
 static void xspi_nor_reset(void)
 {
 	int ret;
@@ -55,6 +57,7 @@ static void xspi_nor_reset(void)
 
 	return;
 }
+#endif
 
 void spl_board_init(void)
 {
@@ -62,10 +65,6 @@ void spl_board_init(void)
 	u32 bd;
 
 	puts("Normal Boot\n");
-
-	ret = ele_start_rng();
-	if (ret)
-		printf("Fail to start RNG: %d\n", ret);
 
 	bd = spl_boot_device();
 	if (bd == BOOT_DEVICE_BOARD) { /* USB */
@@ -108,7 +107,19 @@ void board_init_f(ulong dummy)
 
 	get_reset_reason(true, false);
 
+	ret = ele_start_rng();
+	if (ret)
+		printf("Fail to start RNG: %d\n", ret);
+
+#if IS_ENABLED(CONFIG_IMX_CRRM)
+	ret = crrm_spl_init();
+	if (ret) {
+		printf("CRRM error, boot stop\n");
+		hang();
+	}
+#else
 	xspi_nor_reset();
+#endif
 
 	board_init_r(NULL, 0);
 }

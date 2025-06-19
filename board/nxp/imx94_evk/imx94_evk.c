@@ -17,6 +17,7 @@
 #include <asm/arch/sys_proto.h>
 #include <dm/uclass.h>
 #include <dm/uclass-internal.h>
+#include <asm/arch/crrm.h>
 
 #ifdef CONFIG_USB_TCPC
 struct tcpc_port port;
@@ -170,6 +171,10 @@ int board_init(void)
 
 	power_on_m7("mx94evkrpmsg");
 
+#if IS_ENABLED(CONFIG_IMX_CRRM)
+	crrm_uboot_init();
+#endif
+
 	return 0;
 }
 
@@ -183,6 +188,9 @@ int board_late_init(void)
 	if (IS_ENABLED(CONFIG_AHAB_BOOT))
 		env_set("sec_boot", "yes");
 
+#if IS_ENABLED(CONFIG_IMX_CRRM)
+	crrm_uboot_late_init();
+#endif
 	return 0;
 }
 
