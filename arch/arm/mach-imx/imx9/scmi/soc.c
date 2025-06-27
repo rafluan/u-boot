@@ -13,6 +13,7 @@
 #include <asm/mach-imx/optee.h>
 #include <asm/mach-imx/ele_api.h>
 #include <asm/setup.h>
+#include <asm/system.h>
 #include <dm/uclass.h>
 #include <dm/device.h>
 #include <env_internal.h>
@@ -26,6 +27,7 @@
 #include <scmi_agent.h>
 #include <scmi_nxp_protocols.h>
 #include "common.h"
+#include <time.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -300,6 +302,7 @@ static struct mm_region imx9_mem_map[] = {
 			 PTE_BLOCK_PXN | PTE_BLOCK_UXN
 	},
 #endif
+#if IS_ENABLED(CONFIG_XPL_BUILD)
 	{
 		/* OCRAM */
 		.virt = 0x20480000UL,
@@ -307,7 +310,9 @@ static struct mm_region imx9_mem_map[] = {
 		.size = 0xA0000UL,
 		.attrs = PTE_BLOCK_MEMTYPE(MT_NORMAL) |
 			 PTE_BLOCK_OUTER_SHARE
-	}, {
+	},
+#endif
+	{
 		/* AIPS */
 		.virt = 0x40000000UL,
 		.phys = 0x40000000UL,
@@ -336,6 +341,15 @@ static struct mm_region imx9_mem_map[] = {
 		.virt = 0x100000000UL,
 		.phys = 0x100000000UL,
 		.size = PHYS_SDRAM_2_SIZE,
+		.attrs = PTE_BLOCK_MEMTYPE(MT_NORMAL) |
+			 PTE_BLOCK_OUTER_SHARE
+	}, {
+#endif
+#if defined(CFG_SYS_SECURE_SDRAM_SIZE) && IS_ENABLED(CONFIG_XPL_BUILD)
+		/* DRAM2 */
+		.virt = CFG_SYS_SECURE_SDRAM_BASE,
+		.phys = CFG_SYS_SECURE_SDRAM_BASE,
+		.size = CFG_SYS_SECURE_SDRAM_SIZE,
 		.attrs = PTE_BLOCK_MEMTYPE(MT_NORMAL) |
 			 PTE_BLOCK_OUTER_SHARE
 	}, {
@@ -425,6 +439,33 @@ void enable_caches(void)
 	dcache_enable();
 }
 
+/*
+ * Initialize the MMU and activate cache in SPL stage
+ */
+static void spl_enable_caches(void)
+{
+	u64 pgtable_size;
+
+	if (!IS_ENABLED(CONFIG_XPL_BUILD))
+		return;
+
+	if (CONFIG_IS_ENABLED(SYS_ICACHE_OFF) || CONFIG_IS_ENABLED(SYS_DCACHE_OFF))
+		return;
+
+	pgtable_size = PGTABLE_SIZE;
+	if (pgtable_size > SZ_2M) /* Only first 2MB avaliable for SPL */
+		return;
+
+	gd->arch.tlb_size = pgtable_size;
+	gd->arch.tlb_addr = (unsigned long)CFG_SYS_SECURE_SDRAM_BASE;
+
+	dcache_enable();
+}
+
+void spl_board_prepare_for_boot(void)
+{
+	dcache_disable();
+}
 __weak int board_phys_sdram_size(phys_size_t *size)
 {
 	phys_size_t start, end;
@@ -1412,6 +1453,8 @@ int arch_cpu_init(void)
 		gpio_reset(GPIO6_BASE_ADDR);
 		gpio_reset(GPIO7_BASE_ADDR);
 #endif
+
+		spl_enable_caches();
 	}
 
 	return 0;
