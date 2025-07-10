@@ -12,6 +12,7 @@
 #include <log.h>
 #include <asm-generic/unaligned.h>
 #include <net.h>
+#include <efi_gbl_avb_protocol.h>
 
 #define OBJ_LIST_INITIALIZED 0
 #define OBJ_LIST_NOT_INITIALIZED 1
@@ -388,6 +389,13 @@ efi_status_t efi_init_obj_list(void)
 		ret = efi_launch_capsules();
 	if (ret != EFI_SUCCESS)
 		goto out;
+
+	/* Register GBL AVB protocol */
+	if (IS_ENABLED(CONFIG_EFI_GBL_AVB)) {
+		ret = efi_gbl_avb_register();
+		if (ret != EFI_SUCCESS)
+			goto out;
+	}
 
 	ret = efi_start_obj_list();
 out:

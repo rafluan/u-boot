@@ -1,0 +1,7 @@
+config EFI_GBL_AVB
+	bool "Include GBL AVB protocol"
+	depends on EFI_LOADER
+	help
+	  Include the driver for the custom GBL AVB protocol. This protocol
+	  allows to delegate device-specific Android verified booot (AVB)
+	  logic to the firmware.
