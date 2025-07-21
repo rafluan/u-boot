@@ -230,9 +230,11 @@ static efi_status_t efi_binary_run_dp(void *image, size_t size, void *fdt,
 		return -1;
 	}
 
+#ifndef CONFIG_IMX_ANDROID_GBL
 	ret = efi_install_fdt(fdt);
 	if (ret != EFI_SUCCESS)
 		return ret;
+#endif
 
 	ret = efi_install_initrd(initrd, initrd_sz);
 	if (ret != EFI_SUCCESS)

@@ -681,6 +681,14 @@ static int _lmb_alloc_base(phys_size_t size, ulong align,
 	struct lmb_region *lmb_memory = lmb.available_mem.data;
 
 	max_addr = *addr;
+	/* Make sure the max address won't cross 4GB space
+	 * or some drivers will fail to handle the address.
+	 */
+#ifdef CONFIG_IMX_ANDROID_GBL
+	if (max_addr > 0xffffffff || max_addr == 0)
+		max_addr = 0xffffffff;
+#endif
+
 	for (i = lmb.available_mem.count - 1; i >= 0; i--) {
 		phys_addr_t lmbbase = lmb_memory[i].base;
 		phys_size_t lmbsize = lmb_memory[i].size;
