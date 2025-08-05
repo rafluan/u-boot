@@ -169,6 +169,7 @@ int scmi_misc_ddrinfo(u32 ddrc_id, struct scmi_ddr_info_out *out)
 	int ret;
 	struct udevice *dev;
 
+	memset(out, 0, sizeof(*out));
 	ret = uclass_get_device_by_name(UCLASS_CLK, "protocol@14", &dev);
 	if (ret)
 		return ret;

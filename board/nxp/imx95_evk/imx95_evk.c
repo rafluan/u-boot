@@ -447,13 +447,6 @@ void board_quiesce_devices(void)
 		printf("couldn't remove SPI FLASH devices\n");
 }
 
-int board_phys_sdram_size(phys_size_t *size)
-{
-	*size = PHYS_SDRAM_SIZE + PHYS_SDRAM_2_SIZE;
-
-	return 0;
-}
-
 #if IS_ENABLED(CONFIG_OF_BOARD_FIXUP)
 
 #if IS_ENABLED(CONFIG_TARGET_IMX95_15X15_EVK)
