@@ -36,7 +36,7 @@ static rom_passover_t rom_passover_data = {0};
 uint32_t scmi_get_rom_data(rom_passover_t *rom_data)
 {
 	/* Read ROM passover data */
-	struct scmi_rom_passover_get_out out;
+	struct scmi_rom_passover_get_out out = {};
 	struct scmi_msg msg = {
 		.protocol_id = SCMI_PROTOCOL_ID_IMX_MISC,
 		.message_id = SCMI_MISC_ROM_PASSOVER_GET,
