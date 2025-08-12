@@ -15,6 +15,7 @@
 #include <efi_gbl_avb_protocol.h>
 #include <efi_gbl_os_configuration_protocol.h>
 #include <efi_gbl_boot_control_protocol.h>
+#include <efi_gbl_boot_memory_protocol.h>
 
 #define OBJ_LIST_INITIALIZED 0
 #define OBJ_LIST_NOT_INITIALIZED 1
@@ -410,6 +411,14 @@ efi_status_t efi_init_obj_list(void)
 	/* Register GBL boot control protocol */
 	if (IS_ENABLED(CONFIG_EFI_GBL_BOOT_CONTROL)) {
 		ret = efi_gbl_boot_control_register();
+		if (ret != EFI_SUCCESS) {
+			goto out;
+		}
+	}
+
+	/* Register GBL boot memory protocol */
+	if (IS_ENABLED(CONFIG_EFI_GBL_BOOT_MEMORY)) {
+		ret = efi_gbl_boot_memory_register();
 		if (ret != EFI_SUCCESS) {
 			goto out;
 		}
