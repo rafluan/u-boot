@@ -31,8 +31,17 @@ struct cpu_imx_plat {
 	u32 mpidr;
 };
 
+__weak const char *get_cpu_variant_type_name(u32 type)
+{
+    return NULL;
+}
+
 static const char *get_imx_type_str(u32 imxtype)
 {
+	const char *name = get_cpu_variant_type_name(imxtype);
+	if (name)
+		return name;
+
 	switch (imxtype) {
 	case MXC_CPU_IMX8MM:
 		return "8MMQ";	/* Quad-core version of the imx8mm */

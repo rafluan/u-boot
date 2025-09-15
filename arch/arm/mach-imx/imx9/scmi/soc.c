@@ -1003,14 +1003,54 @@ int power_on_m7(char *name)
 	return 0;
 }
 
-const char *get_imx_type(u32 imxtype)
+const char *get_cpu_variant_type_name(u32 type)
 {
-	switch (imxtype) {
-	case SCMI_CPU:
-		return IMX_PLAT_STR;
-	default:
-		return "??";
+	if (type == MXC_CPU_IMX95) {
+		u32 val = 0, core, segment;
+		int ret;
+		static char *name = "9596";
+
+		ret = fuse_read(2, 1, &val);
+		if (ret)
+			return NULL;
+
+		val = (val >> 4) & 0xff; /* part num */
+		if (!val)
+			return NULL;
+
+		core = val & 0x3;
+		segment = (val >> 2) & 0xf;
+
+		switch (segment) {
+		case 0xa:
+			name[2] = 'T';
+			break;
+		case 0xb:
+			name[2] = 'V';
+			break;
+		case 0xc:
+			name[2] = 'C';
+			break;
+		case 0xd:
+			name[2] = 'G';
+			break;
+		case 0xe:
+			name[2] = 'I';
+			break;
+		case 0xf:
+			name[2] = 'N';
+			break;
+		default:
+			name[2] = segment + '0';
+			break;
+		}
+
+		name[3] = core * 2 + '0';
+
+		return name;
 	}
+
+	return NULL;
 }
 
 void build_info(void)
