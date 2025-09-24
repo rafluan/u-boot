@@ -185,6 +185,12 @@ config TARGET_IMX95_15X15_EVK
 config TARGET_IMX943_EVK
 	bool "imx943_evk"
 	select IMX94
+	select CMD_REMOTEPROC
+	select REMOTEPROC_IMX
+	select REGMAP
+	select SYSCON
+	select IMX_SM_LMM
+	select IMX_SM_CPU
 	imply BOOTSTD_BOOTCOMMAND
 	imply BOOTSTD_FULL
 	imply OF_UPSTREAM

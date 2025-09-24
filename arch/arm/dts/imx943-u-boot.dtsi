@@ -154,6 +154,14 @@
 		reg = <0x15>;
 		#thermal-sensor-cells = <1>;
 	};
+
+	scmi_lmm: protocol@80 {
+		reg = <0x80>;
+	};
+
+	scmi_cpu: protocol@82 {
+		reg = <0x82>;
+	};
 };
 
 &{/firmware/scmi/protocol@11} {
