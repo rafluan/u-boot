@@ -951,6 +951,7 @@ dtb-$(CONFIG_ARCH_IMX8M) += \
 dtb-$(CONFIG_ARCH_IMX9) += \
 	imx93-11x11-frdm.dtb \
 	imx95-19x19-verdin.dtb \
+	imx943-orangebox.dtb \
 	imx91-9x9-qsb.dtb \
 	imx93-var-som-symphony.dtb
 
