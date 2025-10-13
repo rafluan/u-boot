@@ -16,6 +16,7 @@
 #include <asm/arch/sys_proto.h>
 #include <asm/arch/trdc.h>
 #include <asm/mach-imx/boot_mode.h>
+#include <asm/arch-imx9/bbsm.h>
 #include <asm/mach-imx/ele_api.h>
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -33,6 +34,11 @@ void spl_board_init(void)
 	if (ret)
 		printf("Fail to start RNG: %d\n", ret);
 
+#ifdef CONFIG_SPL_IMX_BBSM
+	ret = bbsm_tamper_detect_enable();
+	if (ret)
+		printf("Failed to enable BBSM Tamper Detection: %d\n", ret);
+#endif
 	puts("Normal Boot\n");
 }
 

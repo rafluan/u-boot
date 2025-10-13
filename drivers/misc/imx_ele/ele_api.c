@@ -8,6 +8,7 @@
 #include <asm/io.h>
 #include <asm/mach-imx/sys_proto.h>
 #include <asm/mach-imx/ele_api.h>
+#include <asm/mach-imx/ele_program_bbsm.h>
 #include <dm.h>
 #include <malloc.h>
 #include <memalign.h>
@@ -1396,6 +1397,7 @@ int ele_get_random(u32 src_paddr, size_t len)
 	int ret;
 	u32 start = 0;
 
+
 	if (!dev) {
 		printf("ele dev is not initialized\n");
 		return -ENODEV;
@@ -1438,3 +1440,41 @@ int ele_get_random(u32 src_paddr, size_t len)
 
 	return ret;
 }
+
+#if CONFIG_IS_ENABLED(IMX_BBSM)
+int ele_program_bbsm(u8 operation, u16 policy_mask, u32 reg_offset,
+		     u32 reg_value, u32 *resp_code, u32 *resp_reg_value)
+{
+	struct udevice *dev = gd->arch.ele_dev;
+	int size = sizeof(struct ele_msg);
+	struct ele_msg msg;
+	int ret;
+
+	if (!dev) {
+		printf("ele dev is not initialized\n");
+		return -ENODEV;
+	}
+
+	msg.version = ELE_VERSION;
+	msg.tag = ELE_CMD_TAG;
+	msg.size = 4;
+	msg.command = ELE_PROGRAM_BBSM_REQ;
+
+	msg.data[0] = (policy_mask << 16) | operation;
+	msg.data[1] = reg_offset;
+	msg.data[2] = reg_value;
+
+	ret = misc_call(dev, false, &msg, size, &msg, size);
+	if (ret)
+		printf("Error: %s: ret %d, response 0x%x\n",
+		       __func__, ret, msg.data[0]);
+
+	if (resp_code)
+		*resp_code = msg.data[0];
+
+	if (resp_reg_value)
+		*resp_reg_value = msg.data[1];
+
+	return ret;
+}
+#endif
