@@ -19,6 +19,7 @@
 #include <efi_gbl_fastboot_transport_protocol.h>
 #include <efi_gbl_fastboot_protocol.h>
 #include <efi_gbl_vendor_partition.h>
+#include <efi_gbl_timestamp_protocol.h>
 
 #define OBJ_LIST_INITIALIZED 0
 #define OBJ_LIST_NOT_INITIALIZED 1
@@ -445,6 +446,14 @@ efi_status_t efi_init_obj_list(void)
 
 	if (IS_ENABLED(CONFIG_EFI_GBL_VENDOR_PARTITION)) {
 		ret = efi_gbl_vendor_part_register();
+		if (ret != EFI_SUCCESS) {
+			goto out;
+		}
+	}
+
+	/* Register GBL timestamp protocol */
+	if (IS_ENABLED(CONFIG_EFI_GBL_TIMESTAMP)) {
+		ret = efi_gbl_timestamp_register();
 		if (ret != EFI_SUCCESS) {
 			goto out;
 		}
