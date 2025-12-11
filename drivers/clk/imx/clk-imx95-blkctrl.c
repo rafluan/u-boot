@@ -6,9 +6,11 @@
 
 #include <asm/io.h>
 #include <clk-uclass.h>
+#include <clk/scmi.h>
 #include <dm.h>
 #include <dm/device_compat.h>
 #include <dt-bindings/clock/nxp,imx95-clock.h>
+#include <imx95-clock.h>
 #include <linux/clk-provider.h>
 
 #include "clk.h"
@@ -19,9 +21,11 @@ enum {
 	CLK_MUX,
 };
 
+#define MAX_NUM_PARENTS 4
 struct imx95_blk_ctl_clk_dev_data {
 	const char *name;
 	const char * const *parent_names;
+	u32 clk_parent_ids[4];
 	u32 num_parents;
 	u32 reg;
 	u32 bit_idx;
@@ -41,6 +45,7 @@ static const struct imx95_blk_ctl_clk_dev_data hsio_blk_ctl_clk_dev_data[] = {
 	[0] = {
 		.name = "hsio_blk_ctl_clk",
 		.parent_names = (const char *[]){ "hsiopll", },
+		.clk_parent_ids = { IMX95_CLK_HSIOPLL, },
 		.num_parents = 1,
 		.reg = 0,
 		.bit_idx = 6,
@@ -59,6 +64,7 @@ static const struct imx95_blk_ctl_clk_dev_data imx95_lvds_clk_dev_data[] = {
 	[IMX95_CLK_DISPMIX_LVDS_PHY_DIV] = {
 		.name = "ldb_phy_div",
 		.parent_names = (const char *[]){ "ldbpll", },
+		.clk_parent_ids = { IMX95_CLK_LDBPLL, },
 		.num_parents = 1,
 		.reg = 0,
 		.bit_idx = 0,
@@ -69,6 +75,7 @@ static const struct imx95_blk_ctl_clk_dev_data imx95_lvds_clk_dev_data[] = {
 	[IMX95_CLK_DISPMIX_LVDS_CH0_GATE] = {
 		.name = "lvds_ch0_gate",
 		.parent_names = (const char *[]){ "ldb_phy_div", },
+		.clk_parent_ids = { ~0U, },
 		.num_parents = 1,
 		.reg = 0,
 		.bit_idx = 1,
@@ -79,6 +86,7 @@ static const struct imx95_blk_ctl_clk_dev_data imx95_lvds_clk_dev_data[] = {
 	[IMX95_CLK_DISPMIX_LVDS_CH1_GATE] = {
 		.name = "lvds_ch1_gate",
 		.parent_names = (const char *[]){ "ldb_phy_div", },
+		.clk_parent_ids = { ~0U, },
 		.num_parents = 1,
 		.reg = 0,
 		.bit_idx = 2,
@@ -89,6 +97,7 @@ static const struct imx95_blk_ctl_clk_dev_data imx95_lvds_clk_dev_data[] = {
 	[IMX95_CLK_DISPMIX_PIX_DI0_GATE] = {
 		.name = "lvds_di0_gate",
 		.parent_names = (const char *[]){ "ldb_pll_div7", },
+		.clk_parent_ids = { ~0U, },
 		.num_parents = 1,
 		.reg = 0,
 		.bit_idx = 3,
@@ -99,6 +108,7 @@ static const struct imx95_blk_ctl_clk_dev_data imx95_lvds_clk_dev_data[] = {
 	[IMX95_CLK_DISPMIX_PIX_DI1_GATE] = {
 		.name = "lvds_di1_gate",
 		.parent_names = (const char *[]){ "ldb_pll_div7", },
+		.clk_parent_ids = { ~0U, },
 		.num_parents = 1,
 		.reg = 0,
 		.bit_idx = 4,
@@ -116,10 +126,11 @@ static const struct imx95_blk_ctl_dev_data imx95_lvds_csr_dev_data = {
 
 static int imx95_blkctrl_clk_probe(struct udevice *dev)
 {
-	int i;
+	int i, j, ret;
 	void __iomem *addr;
 	struct imx95_blk_ctl_dev_data *dev_data = (void *)dev_get_driver_data(dev);
 	const struct imx95_blk_ctl_clk_dev_data *clk_dev_data;
+	struct udevice *scmi_clk_dev;
 
 	addr = dev_read_addr_ptr(dev);
 	if (addr == (void *)FDT_ADDR_T_NONE) {
@@ -132,7 +143,42 @@ static int imx95_blkctrl_clk_probe(struct udevice *dev)
 		return -EINVAL;
 	}
 
+	ret = uclass_get_device_by_name(UCLASS_CLK, "protocol@14", &scmi_clk_dev);
+	if (ret) {
+		dev_err(dev, "Failed to find procotol@14\n");
+		return ret;
+	}
+
 	clk_dev_data = dev_data->clk_dev_data;
+	for (i = 0; i < dev_data->num_clks; i++) {
+		ulong id;
+		if (clk_dev_data[i].clk_type == CLK_GATE ||
+		    clk_dev_data[i].clk_type == CLK_DIVIDER) {
+			if (clk_dev_data[i].clk_parent_ids[0] == ~0U)
+				continue;
+
+			id = CLK_ID(scmi_clk_dev, clk_dev_data[i].clk_parent_ids[0]);
+			ret = scmi_clk_resolve_attr(id, NULL);
+			if (ret) {
+				dev_err(dev, "Failed to resolve clk %s\n",
+					clk_dev_data[i].parent_names[0]);
+				return ret;
+			}
+		} else if (clk_dev_data[i].clk_type == CLK_MUX) {
+			for (j = 0; j < clk_dev_data[i].num_parents; j++) {
+				if (clk_dev_data[i].clk_parent_ids[j] == ~0U)
+					continue;
+				id = CLK_ID(scmi_clk_dev, clk_dev_data[i].clk_parent_ids[j]);
+				ret = scmi_clk_resolve_attr(id, NULL);
+				if (ret) {
+					dev_err(dev, "Failed to resolve clk %s\n",
+						clk_dev_data[i].parent_names[0]);
+					return ret;
+				}
+			}
+		}
+	}
+
 	for (i = 0; i < dev_data->num_clks; i++) {
 		if (clk_dev_data[i].clk_type == CLK_GATE) {
 			dev_clk_dm(dev, i,

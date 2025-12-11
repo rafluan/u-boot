@@ -25,4 +25,8 @@ obj-$(CONFIG_$(PHASE_)CLK_IMX93) += clk-imx93.o clk-fracn-gppll.o \
 obj-$(CONFIG_$(PHASE_)CLK_IMXRT1020) += clk-imxrt1020.o
 obj-$(CONFIG_$(PHASE_)CLK_IMXRT1050) += clk-imxrt1050.o
 obj-$(CONFIG_$(PHASE_)CLK_IMXRT1170) += clk-imxrt1170.o
-obj-$(CONFIG_CLK_IMX95_BLKCTRL) += clk-imx95-blkctrl.o
+
+ifdef CONFIG_CLK_IMX95_BLKCTRL
+ccflags-y += -I$(srctree)/dts/upstream/src/arm64/freescale/
+obj-y += clk-imx95-blkctrl.o
+endif
