@@ -6,6 +6,7 @@
 #define LOG_CATEGORY UCLASS_CLK
 
 #include <clk-uclass.h>
+#include <clk/scmi.h>
 #include <dm.h>
 #include <dm/device_compat.h>
 #include <dm/device-internal.h>
@@ -175,7 +176,7 @@ static int scmi_clk_gate(struct clk *clk, int enable)
 	return scmi_to_linux_errno(out.status);
 }
 
-static int scmi_clk_get_ctrl_flags(struct clk *clk, u32 *ctrl_flags)
+int scmi_clk_resolve_attr(ulong id, u32 *ctrl_flags)
 {
 	struct clk_scmi *clkscmi;
 	struct udevice *dev;
@@ -183,7 +184,7 @@ static int scmi_clk_get_ctrl_flags(struct clk *clk, u32 *ctrl_flags)
 	struct clk *c;
 	int ret;
 
-	ret = clk_get_by_id(clk->id, &c);
+	ret = clk_get_by_id(id, &c);
 	if (ret)
 		return ret;
 
@@ -193,7 +194,7 @@ static int scmi_clk_get_ctrl_flags(struct clk *clk, u32 *ctrl_flags)
 
 	if (!clkscmi->attrs_resolved) {
 		char name[SCMI_CLOCK_NAME_LENGTH_MAX];
-		ret = scmi_clk_get_attribute(dev, clk->id & CLK_ID_MSK,
+		ret = scmi_clk_get_attribute(dev, id & CLK_ID_MSK,
 					     name, &attributes);
 		if (ret)
 			return ret;
@@ -202,7 +203,7 @@ static int scmi_clk_get_ctrl_flags(struct clk *clk, u32 *ctrl_flags)
 		if (CLK_HAS_RESTRICTIONS(attributes)) {
 			u32 perm;
 
-			ret = scmi_clk_get_permissions(dev, clk->id & CLK_ID_MSK, &perm);
+			ret = scmi_clk_get_permissions(dev, id & CLK_ID_MSK, &perm);
 			if (ret < 0)
 				clkscmi->ctrl_flags = 0;
 			else
@@ -216,7 +217,8 @@ static int scmi_clk_get_ctrl_flags(struct clk *clk, u32 *ctrl_flags)
 		clkscmi->attrs_resolved = true;
 	}
 
-	*ctrl_flags = clkscmi->ctrl_flags;
+	if (ctrl_flags)
+		*ctrl_flags = clkscmi->ctrl_flags;
 
 	return 0;
 }
@@ -229,7 +231,7 @@ static int scmi_clk_enable(struct clk *clk)
 	if (!CONFIG_IS_ENABLED(CLK_CCF))
 		return scmi_clk_gate(clk, 1);
 
-	ret = scmi_clk_get_ctrl_flags(clk, &ctrl_flags);
+	ret = scmi_clk_resolve_attr(clk->id, &ctrl_flags);
 	if (ret)
 		return ret;
 
@@ -249,7 +251,7 @@ static int scmi_clk_disable(struct clk *clk)
 	if (!CONFIG_IS_ENABLED(CLK_CCF))
 		return scmi_clk_gate(clk, 0);
 
-	ret = scmi_clk_get_ctrl_flags(clk, &ctrl_flags);
+	ret = scmi_clk_resolve_attr(clk->id, &ctrl_flags);
 	if (ret)
 		return ret;
 
@@ -317,7 +319,7 @@ static ulong scmi_clk_set_rate(struct clk *clk, ulong rate)
 	if (!CONFIG_IS_ENABLED(CLK_CCF))
 		return __scmi_clk_set_rate(clk, rate);
 
-	ret = scmi_clk_get_ctrl_flags(clk, &ctrl_flags);
+	ret = scmi_clk_resolve_attr(clk->id, &ctrl_flags);
 	if (ret)
 		return ret;
 
@@ -407,7 +409,7 @@ static int scmi_clk_set_parent(struct clk *clk, struct clk *parent)
 	if (!CONFIG_IS_ENABLED(CLK_CCF))
 		return __scmi_clk_set_parent(clk, parent);
 
-	ret = scmi_clk_get_ctrl_flags(clk, &ctrl_flags);
+	ret = scmi_clk_resolve_attr(clk->id, &ctrl_flags);
 	if (ret)
 		return ret;
 
