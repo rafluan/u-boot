@@ -130,7 +130,7 @@ int ddr_cfg_phy_qb(struct dram_timing_info *timing_info, int fsp_id);
 #endif
 #endif
 
-#elif IS_ENABLED(CONFIG_IMX95) || IS_ENABLED(CONFIG_IMX94) /* CONFIG_IMX95 || CONFIG_IMX94 */
+#elif IS_ENABLED(CONFIG_IMX95) || IS_ENABLED(CONFIG_IMX94) || IS_ENABLED(CONFIG_IMX952) /* iMX95, iMX94, iMX952 */
 #if IS_ENABLED(CONFIG_IMX_SNPS_DDR_PHY_QB_GEN)
 /* Quick Boot related */
 #define DDRPHY_QB_CSR_SIZE	5168
