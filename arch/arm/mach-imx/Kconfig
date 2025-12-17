@@ -116,6 +116,7 @@ config SPL_IMX_QB
 config CMD_IMX_QB
 	bool "Support the 'qb' command"
 	default y
+	imply USE_PREBOOT
 	depends on IMX_SNPS_DDR_PHY_QB_GEN && (IMX95 || IMX94)
 	help
 	  Enable qb command to write/erase DDR quick boot training
