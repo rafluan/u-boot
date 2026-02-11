@@ -245,16 +245,21 @@ static int imx952_dsi2_phy_get_timing(void *priv_data, unsigned int lane_mbps,
 	unsigned long long tmp;
 	unsigned long long hstx_clk;
 
-	hstx_clk = DIV_ROUND_CLOSEST_ULL(lane_mbps * USEC_PER_SEC, 8);
+	hstx_clk = DIV_ROUND_CLOSEST_ULL(lane_mbps, 8);
 
 	/* PHY_LP2HS_TIME = (TLPX + THS-PREPARE + THS-ZERO) / Tphy_hstx_clk */
 	tmp = cfg->lpx + cfg->hs_prepare + cfg->hs_zero;
-	tmp = DIV_ROUND_CLOSEST_ULL((tmp * hstx_clk) << 16, PSEC_PER_SEC);
+	tmp = DIV_ROUND_CLOSEST_ULL((tmp * hstx_clk) << 16, USEC_PER_SEC);
 	timing->data_lp2hs = tmp;
 
 	/* PHY_HS2LP_TIME = (THS-TRAIL + THS-EXIT) / Tphy_hstx_clk */
 	tmp = cfg->hs_trail + cfg->hs_exit;
-	tmp = DIV_ROUND_CLOSEST_ULL((tmp * hstx_clk) << 16, PSEC_PER_SEC);
+
+	/* empirical fixup for 4Kp30/25 with 4 data lanes */
+	if (lane_mbps == 1782 && cfg->lanes == 4)
+		tmp *= 20;
+
+	tmp = DIV_ROUND_CLOSEST_ULL((tmp * hstx_clk) << 16, USEC_PER_SEC);
 	timing->data_hs2lp = tmp;
 
 	return 0;
