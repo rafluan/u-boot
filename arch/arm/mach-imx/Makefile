@@ -98,6 +98,7 @@ obj-$(CONFIG_SPL_LOAD_IMX_CONTAINER) += image-container.o
 endif
 
 ifeq ($(SOC),$(filter $(SOC),imx8ulp imx9))
+obj-y += ele_message.o
 obj-$(CONFIG_AHAB_BOOT) += ele_ahab.o
 endif
 
