@@ -71,6 +71,17 @@ config CSF_SIZE
 	  Define the maximum size for Command Sequence File (CSF) binary
 	  this information is used to define the image boot data.
 
+config CMD_IMX_QB
+	bool "Support the 'qb' command"
+	default y
+	depends on IMX_SNPS_DDR_PHY_QB_GEN && (IMX95 || IMX94)
+	help
+	  Enable qb command to write/erase DDR quick boot training
+	  data to/from a chosen boot device. Using 'qb save/erase'
+	  without args implies using the current boot device. For
+	  use in uuu scripts, the boot device must be specified
+	  explicitly.
+
 config CMD_BMODE
 	bool "Support the 'bmode' command"
 	default y
