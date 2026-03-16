@@ -29,3 +29,4 @@ NXP Semiconductors
    mx6ullevk
    rproc
    psb
+   qb
