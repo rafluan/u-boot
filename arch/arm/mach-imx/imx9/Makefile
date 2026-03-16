@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0+
 #
-# Copyright 2022 NXP
+# Copyright 2022,2026 NXP
 
 obj-y += lowlevel_init.o
 
@@ -12,4 +12,8 @@ endif
 
 ifneq ($(CONFIG_SPL_BUILD),y)
 obj-y += imx_bootaux.o
+endif
+
+ifeq ($(CONFIG_IMX_SNPS_DDR_PHY_QB_GEN),y)
+obj-y += qb.o
 endif

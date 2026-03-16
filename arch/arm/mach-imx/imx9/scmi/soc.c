@@ -281,6 +281,15 @@ static struct mm_region imx9_mem_map[] = {
 			 PTE_BLOCK_NON_SHARE |
 			 PTE_BLOCK_PXN | PTE_BLOCK_UXN
 	}, {
+#if IS_ENABLED(CONFIG_IMX_SNPS_DDR_PHY_QB_GEN)
+		/* QB data */
+		.virt = CONFIG_SAVED_QB_STATE_BASE,
+		.phys = CONFIG_SAVED_QB_STATE_BASE,
+		.size = 0x200000UL,	/* 2M */
+		.attrs = PTE_BLOCK_MEMTYPE(MT_NORMAL) |
+			 PTE_BLOCK_OUTER_SHARE
+	}, {
+#endif /* CONFIG_IMX_SNPS_DDR_PHY_QB_GEN */
 		/* empty entry to split table entry 5 if needed when TEEs are used */
 		0,
 	}, {
