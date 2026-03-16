@@ -71,6 +71,14 @@ config CSF_SIZE
 	  Define the maximum size for Command Sequence File (CSF) binary
 	  this information is used to define the image boot data.
 
+config SPL_IMX_QB
+	bool "Run qb save during SPL"
+	depends on SPL && IMX_SNPS_DDR_PHY_QB_GEN && (IMX95 || IMX94)
+	help
+	  Automatically save DDR training data (Quickboot data)
+	  to current boot device when needed (when OEI runs Training
+	  flow and saves qb data to volatile memory).
+
 config CMD_IMX_QB
 	bool "Support the 'qb' command"
 	default y

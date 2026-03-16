@@ -10,4 +10,6 @@
 
 bool qb_check(void);
 int  qb(int qb_dev, int qb_bootdev, bool save);
+void spl_qb_save(void);
+
 #endif

@@ -428,3 +428,12 @@ int qb(int qb_dev, int qb_bootdev, bool save)
 
 	return 0;
 }
+
+void spl_qb_save(void)
+{
+	int dev = spl_boot_device();
+
+	/* Save QB data on current boot device */
+	if (qb(dev, dev, true))
+		printf("QB save failed\n");
+}

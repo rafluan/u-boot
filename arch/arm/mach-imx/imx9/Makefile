@@ -15,7 +15,9 @@ obj-y += imx_bootaux.o
 endif
 
 ifeq ($(CONFIG_IMX_SNPS_DDR_PHY_QB_GEN),y)
-ifneq ($(CONFIG_XPL_BUILD),y)
+ifeq ($(CONFIG_XPL_BUILD),y)
+obj-$(CONFIG_SPL_IMX_QB) += qb.o
+else
 obj-$(CONFIG_CMD_IMX_QB) += qb.o
 endif
 endif
