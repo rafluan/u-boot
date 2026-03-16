@@ -4,6 +4,7 @@
  */
 
 #include "vsprintf.h"
+#include <memalign.h>
 #include <command.h>
 #include <ctype.h>
 #include <errno.h>
@@ -101,7 +102,11 @@ static int do_ele_message(struct cmd_tbl *cmdtp, int flag, int argc,
 		return CMD_RET_FAILURE;
 	}
 
-	flush_cache(ele_buffer_address, ele_buffer_size);
+	/* Align cache maintenance range */
+	ulong cache_start = ALIGN_DOWN(ele_buffer_address, ARCH_DMA_MINALIGN);
+	ulong cache_end   = ALIGN(ele_buffer_address + ele_buffer_size, ARCH_DMA_MINALIGN);
+
+	flush_dcache_range(cache_start, cache_end);
 
 	/* We send the message to ELE and receive back the response */
 	ret = ele_message_call(&msg);
@@ -110,7 +115,7 @@ static int do_ele_message(struct cmd_tbl *cmdtp, int flag, int argc,
 		return CMD_RET_FAILURE;
 	}
 
-	invalidate_dcache_range(ele_buffer_address, ele_buffer_size);
+	invalidate_dcache_range(cache_start, cache_end);
 
 	/* ELE reponse is a message too */
 	print_ele_message(&msg);
