@@ -694,3 +694,21 @@
 &sram0 {
 	bootph-all;
 };
+
+&pcie0 {
+	assigned-clocks =<&scmi_clk IMX94_CLK_HSIOPLL_VCO>,
+			 <&scmi_clk IMX94_CLK_HSIOPLL>,
+			 <&scmi_clk IMX94_CLK_HSIOPCIEAUX>;
+	assigned-clock-rates = <3600000000>, <100000000>, <10000000>;
+	assigned-clock-parents = <0>, <&scmi_clk IMX94_CLK_HSIOPLL_VCO>,
+				 <&scmi_clk IMX94_CLK_SYSPLL1_PFD1_DIV2>;
+};
+
+&pcie1 {
+	assigned-clocks =<&scmi_clk IMX94_CLK_HSIOPLL_VCO>,
+			 <&scmi_clk IMX94_CLK_HSIOPLL>,
+			 <&scmi_clk IMX94_CLK_HSIOPCIEAUX>;
+	assigned-clock-rates = <3600000000>, <100000000>, <10000000>;
+	assigned-clock-parents = <0>, <&scmi_clk IMX94_CLK_HSIOPLL_VCO>,
+				 <&scmi_clk IMX94_CLK_SYSPLL1_PFD1_DIV2>;
+};
