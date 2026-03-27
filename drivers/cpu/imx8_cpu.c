@@ -208,7 +208,7 @@ static int cpu_imx_get_temp(struct cpu_imx_plat *plat)
 	if (IS_ENABLED(CONFIG_IMX8)) {
 		if (plat->cpu_rsrc == SC_R_A72)
 			idx = 2; /* use "cpu-thermal1" device */
-	} else if (IS_ENABLED(CONFIG_IMX91)) {
+	} else if (IS_ENABLED(CONFIG_ARCH_IMX9) || IS_ENABLED(CONFIG_ARCH_IMX8ULP)) {
 		idx = 0;
 	} else {
 		idx = 1;
