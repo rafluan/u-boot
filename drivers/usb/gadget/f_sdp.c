@@ -930,13 +930,13 @@ int spl_sdp_handle(struct udevice *udc, struct spl_image_info *spl_image,
 			return -EINVAL;
 		}
 
+		schedule();
+		dm_usb_gadget_handle_interrupts(udc);
+
 		if (flag == SDP_EXIT)
 			return 0;
 		else if (flag == SDP_FAIL)
 			return -EIO;
-
-		schedule();
-		dm_usb_gadget_handle_interrupts(udc);
 
 #ifdef CONFIG_XPL_BUILD
 		flag = sdp_handle_in_ep(spl_image, bootdev);
