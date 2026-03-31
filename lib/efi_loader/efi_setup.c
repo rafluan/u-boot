@@ -20,6 +20,11 @@
 #include <efi_gbl_fastboot_protocol.h>
 #include <efi_gbl_vendor_partition.h>
 #include <efi_gbl_timestamp_protocol.h>
+#ifdef CONFIG_IMX_ANDROID_GBL
+const efi_guid_t efi_gbl_vendor_variable_guid = EFI_GBL_VENDOR_GUID;
+// api level corresponding to android codebase
+static char gbl_api_level[8] = "202504";
+#endif
 
 #define OBJ_LIST_INITIALIZED 0
 #define OBJ_LIST_NOT_INITIALIZED 1
@@ -460,6 +465,22 @@ efi_status_t efi_init_obj_list(void)
 	}
 
 	ret = efi_start_obj_list();
+
+#ifdef CONFIG_IMX_ANDROID_GBL
+	/* Pass GBL variables */
+	char *api_level = gbl_api_level;
+	ret = efi_set_variable_int(u"gbl_fw_api_level",
+				   &efi_gbl_vendor_variable_guid,
+				   EFI_VARIABLE_BOOTSERVICE_ACCESS |
+				   EFI_VARIABLE_RUNTIME_ACCESS |
+				   EFI_VARIABLE_READ_ONLY,
+				   strlen(api_level),
+				   api_level,
+				   false);
+	if (ret != EFI_SUCCESS)
+		goto out;
+#endif
+
 out:
 	efi_obj_list_initialized = ret;
 	return ret;
