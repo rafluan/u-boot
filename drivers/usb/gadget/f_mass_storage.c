@@ -2554,6 +2554,7 @@ static void fsg_common_release(struct fsg_common *common)
 	/* If the thread isn't already dead, tell it to exit now */
 	if (common->state != FSG_STATE_TERMINATED) {
 		raise_exception(common, FSG_STATE_EXIT);
+		handle_exception(common);
 		wait_for_completion(&common->thread_notifier);
 	}
 
