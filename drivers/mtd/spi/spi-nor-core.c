@@ -4345,6 +4345,7 @@ static int spi_nor_init(struct spi_nor *nor)
 	     JEDEC_MFR(nor->info) == SNOR_MFR_INTEL ||
 	     JEDEC_MFR(nor->info) == SNOR_MFR_SST ||
 	     JEDEC_MFR(nor->info) == SNOR_MFR_ADESTO ||
+	     JEDEC_MFR(nor->info) == SNOR_MFR_SPANSION ||
 	     nor->info->flags & SPI_NOR_HAS_LOCK)) {
 		write_enable(nor);
 		write_sr(nor, 0);
