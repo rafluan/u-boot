@@ -396,6 +396,9 @@ extern const efi_guid_t efi_guid_text_output_protocol;
 
 /* GUID of GBL vendor variable */
 extern const efi_guid_t efi_gbl_vendor_variable_guid;
+#ifdef CONFIG_EFI_ERASE_BLOCK
+extern const efi_guid_t efi_erase_block_protocol_guid;
+#endif
 
 /**
  * struct efi_open_protocol_info_item - open protocol info item

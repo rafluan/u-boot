@@ -596,6 +596,14 @@ config BOOTEFI_TESTAPP_COMPILE
 	  No additional space will be required in the resulting U-Boot binary
 	  when this option is enabled.
 
+config EFI_ERASE_BLOCK
+	bool "EFI_ERASE_BLOCK_PROTOCOL support"
+	default n
+	help
+	  Provide the EFI_ERASE_BLOCK_PROTOCOL for block devices.
+	  This protocol allows EFI applications to erase blocks on
+	  storage devices.
+
 endif
 
 source "lib/efi_client/Kconfig"
