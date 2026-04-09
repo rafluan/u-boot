@@ -31,7 +31,6 @@ struct imx95_blk_ctl_clk_dev_data {
 	u32 num_parents;
 	u32 reg;
 	u32 bit_idx;
-	u32 clk_type;
 	u32 flags;
 	u32 flags2;
 	u32 type;
@@ -205,8 +204,8 @@ static int imx95_blkctrl_clk_probe(struct udevice *dev)
 	clk_dev_data = dev_data->clk_dev_data;
 	for (i = 0; i < dev_data->num_clks; i++) {
 		ulong id;
-		if (clk_dev_data[i].clk_type == CLK_GATE ||
-		    clk_dev_data[i].clk_type == CLK_DIVIDER) {
+		if (clk_dev_data[i].type == CLK_GATE ||
+		    clk_dev_data[i].type == CLK_DIVIDER) {
 			if (clk_dev_data[i].clk_parent_ids[0] == ~0U)
 				continue;
 
@@ -217,7 +216,7 @@ static int imx95_blkctrl_clk_probe(struct udevice *dev)
 					clk_dev_data[i].parent_names[0]);
 				return ret;
 			}
-		} else if (clk_dev_data[i].clk_type == CLK_MUX) {
+		} else if (clk_dev_data[i].type == CLK_MUX) {
 			for (j = 0; j < clk_dev_data[i].num_parents; j++) {
 				if (clk_dev_data[i].clk_parent_ids[j] == ~0U)
 					continue;
@@ -233,7 +232,7 @@ static int imx95_blkctrl_clk_probe(struct udevice *dev)
 	}
 
 	for (i = 0; i < dev_data->num_clks; i++) {
-		if (clk_dev_data[i].clk_type == CLK_GATE) {
+		if (clk_dev_data[i].type == CLK_GATE) {
 			dev_clk_dm(dev, i,
 				   clk_register_gate(dev,
 						     clk_dev_data[i].name,
@@ -242,7 +241,7 @@ static int imx95_blkctrl_clk_probe(struct udevice *dev)
 						     dev_data->clk_reg_offset,
 						     clk_dev_data[i].bit_idx,
 						     clk_dev_data[i].flags2, NULL));
-		} else if (clk_dev_data[i].clk_type == CLK_DIVIDER) {
+		} else if (clk_dev_data[i].type == CLK_DIVIDER) {
 			dev_clk_dm(dev, i,
 				   clk_register_divider(dev, clk_dev_data[i].name,
 							clk_dev_data[i].parent_names[0],
@@ -250,7 +249,7 @@ static int imx95_blkctrl_clk_probe(struct udevice *dev)
 							dev_data->clk_reg_offset,
 							clk_dev_data[i].bit_idx, 1,
 							clk_dev_data[i].flags2));
-		} else if (clk_dev_data[i].clk_type == CLK_MUX) {
+		} else if (clk_dev_data[i].type == CLK_MUX) {
 			dev_clk_dm(dev, i,
 				   clk_register_mux(dev,
 						    clk_dev_data[i].name,
