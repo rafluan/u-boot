@@ -29,7 +29,33 @@ int spl_board_boot_device(enum boot_device boot_dev_spl)
 
 void spl_dram_init(void)
 {
+#if !IS_ENABLED(CONFIG_IMX8M_LPDDR4)
 	ddr_init(&dram_timing);
+#else
+	extern struct dram_timing_info dram_timing_micron;
+
+	int ret;
+	int mr5, mr8;
+
+	ret = ddr_init(&dram_timing_micron);
+	if(!ret){
+		mr5 = lpddr4_mr_read(1, 5);
+		mr8 = lpddr4_mr_read(1, 8);
+		if((mr5 = 0xff) && (mr8 == 0x18)) {
+			debug("Micron DDR\n");
+			return;
+		}
+	}
+	ret = ddr_init(&dram_timing);
+	if(!ret){
+		mr5 = lpddr4_mr_read(1, 5);
+		mr8 = lpddr4_mr_read(1, 8);
+		if((mr5 = 0xff) && (mr8 == 0x10)) {
+			debug("Kingston DDR\n");
+			return;
+		}
+	}
+#endif
 }
 
 #if CONFIG_IS_ENABLED(DM_PMIC_BD71837)
