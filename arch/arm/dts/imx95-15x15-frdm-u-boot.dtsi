@@ -4,6 +4,10 @@
  */
 
 / {
+	chosen {
+		bootargs = "console=ttyLP0,115200 earlycon";
+	};
+
 	aliases {
 		pci0 = &netc_bus0;
 		pci1 = &netc_bus1;

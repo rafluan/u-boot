@@ -6,6 +6,10 @@
 #include "imx93-u-boot.dtsi"
 
 / {
+	chosen {
+		bootargs = "console=ttyLP0,115200";
+	};
+
 	wdt-reboot {
 		compatible = "wdt-reboot";
 		wdt = <&wdog3>;
