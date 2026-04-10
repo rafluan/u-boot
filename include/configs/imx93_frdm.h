@@ -35,4 +35,8 @@
 #define NS_ARCH_ARM64 1
 #endif
 
+#ifdef CONFIG_IMX_MATTER_TRUSTY
+#define NS_ARCH_ARM64 1
+#endif
+
 #endif

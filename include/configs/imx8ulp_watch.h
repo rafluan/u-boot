@@ -8,11 +8,10 @@
 
 #include <linux/sizes.h>
 #include <asm/arch/imx-regs.h>
-#include "imx_env.h"
-
-#define CFG_SYS_UBOOT_BASE	(QSPI0_AMBA_BASE + CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR * 512)
+#include <env/nxp/imx_env.h>
 
 #ifdef CONFIG_XPL_BUILD
+
 #define CFG_MALLOC_F_ADDR		0x22040000
 
 #endif
