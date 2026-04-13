@@ -188,7 +188,7 @@ U_BOOT_CMD(
 #endif
 
 #ifdef CONFIG_FLASH_MCUFIRMWARE_SUPPORT
-#if defined (CONFIG_IMX95) || defined(CONFIG_ARCH_IMX8M)
+#if defined (CONFIG_IMX95) || defined (CONFIG_IMX952) || defined(CONFIG_ARCH_IMX8M)
 static int do_bootmcu(struct cmd_tbl *cmdtp, int flag, int argc, char * const argv[])
 {
 	int ret;
