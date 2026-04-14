@@ -9,4 +9,11 @@ config SYS_VENDOR
 config SYS_CONFIG_NAME
 	default "imx91_frdm"
 
+config IMX91_FRDM_LPDDR4
+	bool "Using LPDDR4 Timing and PMIC voltage"
+	default y
+	select IMX9_LPDDR4X
+	help
+	  Select the LPDDR4 timing and 1.1V VDDQ
+
 endif
