@@ -298,8 +298,6 @@ static int pca9450_regulator_probe(struct udevice *dev)
 {
 	struct pca9450_plat *plat = dev_get_plat(dev);
 	int i, type, ret;
-	unsigned int val;
-	bool pmic_trim = false;
 
 	type = dev_get_driver_data(dev_get_parent(dev));
 
@@ -309,22 +307,13 @@ static int pca9450_regulator_probe(struct udevice *dev)
 		return -EINVAL;
 	}
 
-	ret = pmic_reg_read(dev->parent, PCA9450_PWR_CTRL);
-	if (ret < 0)
-		return ret;
-
-	val = ret;
-
-	if ((type == NXP_CHIP_TYPE_PCA9451A || type == NXP_CHIP_TYPE_PCA9452) &&
-	    (val & PCA9450_REG_PWRCTRL_TOFF_DEB))
-		pmic_trim = true;
-
 	for (i = 0; i < ARRAY_SIZE(pca9450_reg_data); i++) {
 		if (strcmp(dev->name, pca9450_reg_data[i].name))
 			continue;
 
-		if (pmic_trim && (!strcmp(pca9450_reg_data[i].name, "BUCK1") ||
-				  !strcmp(pca9450_reg_data[i].name, "BUCK3"))) {
+		if ((type == NXP_CHIP_TYPE_PCA9451A || type == NXP_CHIP_TYPE_PCA9452) &&
+		    (!strcmp(pca9450_reg_data[i].name, "BUCK1") ||
+		    !strcmp(pca9450_reg_data[i].name, "BUCK3"))) {
 			*plat = pca9450_reg_data[i + 1];
 			return 0;
 		}
