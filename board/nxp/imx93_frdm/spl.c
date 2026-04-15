@@ -102,12 +102,13 @@ void spl_dram_init(void)
 		}
 	}
 }
+
 #if CONFIG_IS_ENABLED(DM_PMIC_PCA9450)
 int power_init_board(void)
 {
 	struct udevice *dev;
 	int ret;
-	unsigned int val = 0, buck_val;
+	unsigned int buck_val;
 
 	ret = pmic_get("pmic@25", &dev);
 	if (ret != 0) {
@@ -120,12 +121,6 @@ int power_init_board(void)
 
 	/* enable DVS control through PMIC_STBY_REQ */
 	pmic_reg_write(dev, PCA9450_BUCK1CTRL, 0x59);
-
-	ret = pmic_reg_read(dev, PCA9450_PWR_CTRL);
-	if (ret < 0)
-		return ret;
-
-	val = ret;
 
 	if (is_voltage_mode(VOLT_LOW_DRIVE)) {
 		buck_val = 0x0c; /* 0.8v for Low drive mode */
@@ -140,21 +135,13 @@ int power_init_board(void)
 
 	ele_volt_change_start_req();
 
-	if (val & PCA9450_REG_PWRCTRL_TOFF_DEB) {
-		pmic_reg_write(dev, PCA9450_BUCK1OUT_DVS0, buck_val);
-		pmic_reg_write(dev, PCA9450_BUCK3OUT_DVS0, buck_val);
-	} else {
-		pmic_reg_write(dev, PCA9450_BUCK1OUT_DVS0, buck_val + 0x4);
-		pmic_reg_write(dev, PCA9450_BUCK3OUT_DVS0, buck_val + 0x4);
-	}
+	pmic_reg_write(dev, PCA9450_BUCK1OUT_DVS0, buck_val);
+	pmic_reg_write(dev, PCA9450_BUCK3OUT_DVS0, buck_val);
 
 	ele_volt_change_finish_req();
 
 	/* set standby voltage to 0.65v */
-	if (val & PCA9450_REG_PWRCTRL_TOFF_DEB)
-		pmic_reg_write(dev, PCA9450_BUCK1OUT_DVS1, 0x0);
-	else
-		pmic_reg_write(dev, PCA9450_BUCK1OUT_DVS1, 0x4);
+	pmic_reg_write(dev, PCA9450_BUCK1OUT_DVS1, 0x0);
 
 	/* I2C_LT_EN*/
 	pmic_reg_write(dev, 0xa, 0x3);
