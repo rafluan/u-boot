@@ -6,6 +6,8 @@
 #ifndef __IMX93_FRDM_H
 #define __IMX93_FRDM_H
 
+#include <linux/sizes.h>
+#include <linux/stringify.h>
 #include <asm/arch/imx-regs.h>
 
 #define CFG_SYS_UBOOT_BASE	\
@@ -22,5 +24,15 @@
 
 /* Using ULP WDOG for reset */
 #define WDOG_BASE_ADDR			WDG3_BASE_ADDR
+#ifdef CONFIG_ENV_MMC_DEVICE_INDEX
+#define IMX93_EVK_MMC_ENV_DEV CONFIG_ENV_MMC_DEVICE_INDEX
+#else
+#define IMX93_EVK_MMC_ENV_DEV 0
+#endif
+/* Link Definitions */
+
+#ifdef CONFIG_IMX_MATTER_TRUSTY
+#define NS_ARCH_ARM64 1
+#endif
 
 #endif

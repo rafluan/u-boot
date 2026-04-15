@@ -1,6 +1,7 @@
-// SPDX-License-Identifier: BSD-3-Clause
 /*
  * Copyright 2025 NXP
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
  *
  * Code generated with DDR Tool v3.4.0_8.3-4e2b550a.
  * DDR PHY FW2022.01
@@ -1978,7 +1979,7 @@ static struct dram_fsp_msg ddr_dram_fsp_msg[] = {
 };
 
 /* ddr timing config params */
-struct dram_timing_info dram_timing_2GB = {
+struct dram_timing_info dram_timing_1CS_2GB = {
 	.ddrc_cfg = ddr_ddrc_cfg,
 	.ddrc_cfg_num = ARRAY_SIZE(ddr_ddrc_cfg),
 	.ddrphy_cfg = ddr_ddrphy_cfg,
