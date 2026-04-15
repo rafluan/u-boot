@@ -103,6 +103,14 @@
 	status = "okay";
 };
 
+&display_pixel_link {
+	status = "okay";
+};
+
+&dpu {
+	status = "okay";
+};
+
 &enetc_port0 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_enetc0>;
@@ -169,6 +177,27 @@
 };
 
 &netcmix_blk_ctrl {
+	status = "okay";
+};
+
+&ldb {
+	assigned-clocks = <&scmi_clk IMX95_CLK_LDBPLL_VCO>,
+			  <&scmi_clk IMX95_CLK_LDBPLL>;
+	assigned-clock-rates = <4158000000>, <1039500000>;
+	status = "okay";
+
+	channel@1 {
+		status = "okay";
+
+		port@1 {
+			lvds1_out: endpoint {
+				remote-endpoint = <&it6263_in>;
+			};
+		};
+	};
+};
+
+&ldb1_phy {
 	status = "okay";
 };
 
@@ -244,6 +273,25 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_lpi2c4>;
 	status = "okay";
+
+	bridge@4c {
+		compatible = "ite,it6263";
+		reg = <0x4c>;
+		reset-gpios = <&pcal6524 23 GPIO_ACTIVE_LOW>;
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+
+				it6263_in: endpoint {
+					remote-endpoint = <&lvds1_out>;
+				};
+			};
+		};
+	};
 };
 
 &lpi2c6 {
@@ -268,6 +316,14 @@
 	reset-gpio = <&gpio5 13 GPIO_ACTIVE_LOW>;
 	vpcie-supply = <&reg_m2_mkey_pwr>;
 	status = "okay";
+};
+
+&pixel_interleaver {
+	status = "okay";
+
+	channel@1 {
+		status = "okay";
+	};
 };
 
 &usdhc1 {
