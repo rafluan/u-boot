@@ -11,6 +11,7 @@
 #include <asm/arch/clock.h>
 #include <asm/arch/mu.h>
 #include <asm/arch/sys_proto.h>
+#include <asm/arch-imx9/bbsm.h>
 #include <asm/mach-imx/boot_mode.h>
 #include <asm/mach-imx/ele_api.h>
 #include <asm/mach-imx/qb.h>
@@ -48,6 +49,12 @@ void spl_board_init(void)
 	ret = ele_start_rng();
 	if (ret)
 		printf("Fail to start RNG: %d\n", ret);
+
+#ifdef CONFIG_SPL_IMX_BBSM
+	ret = bbsm_tamper_detect_enable();
+	if (ret)
+		printf("Failed to enable BBSM Tamper Detection: %d\n", ret);
+#endif
 
 	bd = spl_boot_device();
 	if (bd == BOOT_DEVICE_BOARD) { /* USB */
