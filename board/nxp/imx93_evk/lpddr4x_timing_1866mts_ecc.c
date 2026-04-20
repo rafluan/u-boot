@@ -1,10 +1,11 @@
 /*
- * Copyright 2024 NXP
+ * Copyright 2024-2026 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
- * Code generated with DDR Tool v3.4.0_8.3-4e2b550a.
+ * Code generated with DDR Tool v4.1.0_8.7-c7c15580c.
  * DDR PHY FW2022.01
+ * Part number: NXP LPDDR4X EVK and FRDM 11x11 board's default DDR part
  */
 
 #include <linux/kernel.h>
@@ -38,11 +39,11 @@ static struct dram_fsp_cfg ddr_dram_fsp_cfg[] = {
     {
         {
             {0x4e300100, 0x12552100},
-            {0x4e300104, 0xF877000E},
+            {0x4e300104, 0xDA77000E},
             {0x4e300108, 0x1816B4AA},
             {0x4e30010C, 0x0051E1E6},
             {0x4e300124, 0x0E030000},
-            {0x4e300160, 0x00009101},
+            {0x4e300160, 0x0000B101},
             {0x4e30016C, 0x30900000},
             {0x4e300170, 0x8A0A0508},
             {0x4e300250, 0x00000014},
@@ -67,11 +68,11 @@ static struct dram_fsp_cfg ddr_dram_fsp_cfg[] = {
     {
         {
             {0x4e300100, 0x010A1000},
-            {0x4e300104, 0xF855000A},
+            {0x4e300104, 0xDA55000A},
             {0x4e300108, 0x9492AA58},
             {0x4e30010C, 0x00310113},
             {0x4e300124, 0x07000000},
-            {0x4e300160, 0x00009100},
+            {0x4e300160, 0x0000B100},
             {0x4e30016C, 0x30200000},
             {0x4e300170, 0x89090408},
             {0x4e300250, 0x0000000A},
@@ -93,11 +94,11 @@ static struct dram_fsp_cfg ddr_dram_fsp_cfg[] = {
     {
         {
             {0x4e300100, 0x00061000},
-            {0x4e300104, 0xF855000A},
+            {0x4e300104, 0xDA55000A},
             {0x4e300108, 0x6E62FA48},
             {0x4e30010C, 0x0031010D},
             {0x4e300124, 0x04830000},
-            {0x4e300160, 0x00009100},
+            {0x4e300160, 0x0000B100},
             {0x4e30016C, 0x30000000},
             {0x4e300170, 0x89090408},
             {0x4e300250, 0x00000007},
