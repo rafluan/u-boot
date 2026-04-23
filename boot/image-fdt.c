@@ -189,7 +189,7 @@ int boot_relocate_fdt(char **of_flat_tree, ulong *of_size)
 			/* All ones means use fdt in place */
 			of_start = fdt_blob;
 			addr = map_to_sysmem(fdt_blob);
-			printf("WARNING:\n"
+			debug("WARNING:\n"
 			       "The 'fdt_high' environment variable is set to ~0. This is known to cause\n"
 			       "boot failures due to placement of DT at non-8-byte-aligned addresses.\n"
 			       "This system will likely fail to boot. Unset the 'fdt_high' environment\n"
