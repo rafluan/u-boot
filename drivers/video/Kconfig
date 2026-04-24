@@ -1500,4 +1500,13 @@ config VIDEO_LT8912B
 	  Say Y here if you want to enable support for Lontium 8912B
 	  DSI to HDMI connector, currently only support 1920x1080.
 
+config VIDEO_WAVESHARE_DSI
+	bool "Waveshare DSI to DPI 7.0 inch Panel"
+	depends on VIDEO
+	select VIDEO_MIPI_DSI
+	default n
+	help
+	  Say Y here if you want to enable support for Waveshare
+	  7.0inch-c-panel which is 1024x600.
+
 endmenu
