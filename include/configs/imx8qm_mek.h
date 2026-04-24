@@ -79,6 +79,7 @@
 	SPLASH_IMAGE_ADDR \
 	CFG_CONSOLE \
 	FDT_ADDR \
+	"fdt_high=0xffffffffffffffff\0"		\
 	"cntr_addr=0x98000000\0"			\
 	"cntr_file=os_cntr_signed.bin\0" \
 	"boot_fdt=try\0" \
