@@ -36,7 +36,7 @@
 
 #define PIXEL_LINK_STREAMS		2
 
-#define ESC_CLK_RATE_HZ			18562500
+#define MAX_ESC_CLK_RATE_HZ			20000000
 
 enum dsi_pixel_link_format {
 	RGB_24BIT,
@@ -70,6 +70,7 @@ struct imx952_dsi2_priv {
 	u32 lanes;
 	u32 format;
 	struct display_timing adj;
+	unsigned long esc_clk_rate;
 };
 
 static inline unsigned long data_rate_to_fout(unsigned long data_rate)
@@ -123,27 +124,29 @@ static int imx952_dsi2_phy_init(void *priv_data)
 		return ret;
 	}
 
-	ret = generic_phy_configure(&dsi->phy, &dsi->phy_cfg);
-	if (ret < 0) {
-		dev_err(dev, "failed to configure phy: %d\n", ret);
-		goto uninit_phy;
-	}
-
-	ret = generic_phy_power_on(&dsi->phy);
-	if (ret < 0) {
-		dev_err(dev, "failed to power on phy: %d\n", ret);
-		goto uninit_phy;
-	}
-
 	return 0;
-
-uninit_phy:
-	generic_phy_exit(&dsi->phy);
-	return ret;
 }
 
 static void imx952_dsi2_phy_power_on(void *priv_data)
 {
+	struct imx952_dsi2_priv *dsi = priv_data;
+	struct udevice *dev = dsi->device.dev;
+	struct phy_configure_opts_mipi_dphy *dphy_opts = &dsi->phy_cfg;
+	int ret;
+
+	dphy_opts->lpx = PSEC_PER_SEC / dsi->esc_clk_rate;
+
+	debug("PHY lpx = %ups\n", dphy_opts->lpx);
+
+	ret = generic_phy_configure(&dsi->phy, &dsi->phy_cfg);
+	if (ret < 0) {
+		dev_err(dev, "failed to configure phy: %d\n", ret);
+		return;
+	}
+
+	ret = generic_phy_power_on(&dsi->phy);
+	if (ret < 0)
+		dev_err(dev, "failed to power on phy: %d\n", ret);
 }
 
 static void imx952_dsi2_phy_power_off(void *priv_data)
@@ -268,7 +271,26 @@ static int imx952_dsi2_phy_get_timing(void *priv_data, unsigned int lane_mbps,
 static void
 imx952_dsi2_phy_get_esc_clk_rate(void *priv_data, unsigned int *esc_clk_rate)
 {
-	*esc_clk_rate = ESC_CLK_RATE_HZ;
+	struct imx952_dsi2_priv *dsi = priv_data;
+	unsigned long pclk_rate;
+	unsigned int div = 2;
+
+	pclk_rate = clk_get_rate(dsi->clk_pixel);
+	if (pclk_rate == 0)
+		return;
+
+	*esc_clk_rate = pclk_rate;
+	while (*esc_clk_rate > MAX_ESC_CLK_RATE_HZ) {
+		*esc_clk_rate = pclk_rate / div;
+		div = div + 2;
+
+		if (div > 126)
+			return;
+	}
+
+	dsi->esc_clk_rate = *esc_clk_rate;
+
+	debug("get esc_clk_rate = %u\n", *esc_clk_rate);
 }
 
 static const struct mipi_dsi_phy_ops imx952_dsi2_phy_ops = {
